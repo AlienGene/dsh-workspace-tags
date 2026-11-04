@@ -36,9 +36,11 @@ describe('view options injection', () => {
     const button = wrapper?.querySelector('button[role="menuitem"]')
     expect(button?.textContent).toBe('按标签')
     expect(button?.querySelector('svg')).not.toBeNull()
+    expect(button?.hasAttribute('data-dshwt-view-menu-tag')).toBe(true)
+    expect(button?.hasAttribute('data-dshwt-group-by-tag')).toBe(false)
 
-    const nativeRows = Array.from(menu.querySelectorAll('[role="menuitem"]')).filter((item) => !item.hasAttribute('data-dshwt-group-by-tag'))
-    expect(nativeRows[3]?.hasAttribute('data-dshwt-group-by-tag')).toBe(false)
+    const nativeRows = Array.from(menu.querySelectorAll('[role="menuitem"]')).filter((item) => !item.hasAttribute('data-dshwt-view-menu-tag'))
+    expect(nativeRows[3]?.hasAttribute('data-dshwt-view-menu-tag')).toBe(false)
     const labels = Array.from(menu.querySelectorAll('[role="menuitem"]')).map((item) => item.textContent)
     expect(labels.slice(0, 4)).toEqual(['按工作区', '按工作区树', '单列表', '按标签'])
   })
@@ -56,7 +58,7 @@ describe('view options injection', () => {
     const store = hydrate()
     const menu = mountViewMenu(0)
     syncViewMenu(document, store, t)
-    const button = menu.querySelector<HTMLButtonElement>('[data-dshwt-group-by-tag]')
+    const button = menu.querySelector<HTMLButtonElement>('[data-dshwt-view-menu-tag]')
     let escapes = 0
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') escapes += 1
@@ -77,7 +79,7 @@ describe('view options injection', () => {
     workspaceRow?.addEventListener('click', () => {
       clicks += 1
     })
-    menu.querySelector<HTMLButtonElement>('[data-dshwt-group-by-tag]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    menu.querySelector<HTMLButtonElement>('[data-dshwt-view-menu-tag]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(clicks).toBe(1)
     expect(store.getSnapshot().groupByTag).toBe(true)
   })
@@ -86,7 +88,7 @@ describe('view options injection', () => {
     const store = hydrate()
     const menu = mountViewMenu(0)
     syncViewMenu(document, store, t)
-    menu.querySelector<HTMLButtonElement>('[data-dshwt-group-by-tag]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    menu.querySelector<HTMLButtonElement>('[data-dshwt-view-menu-tag]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(store.getSnapshot().groupByTag).toBe(true)
     const native = menu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')[1]
     native?.dispatchEvent(new MouseEvent('click', { bubbles: true }))

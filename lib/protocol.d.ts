@@ -25,6 +25,8 @@ declare const CLIENT_ROUTE = "api/dsh-tags/state";
 declare const PANEL_ID = "workspace-tags";
 /** Palette used for automatic tag colors and the manager's swatch row. */
 declare const TAG_PALETTE: readonly ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#64748b'];
+/** Six preset colours offered by the workspace annotation picker. */
+declare const PICKER_PALETTE: readonly ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#64748b'];
 /** One durable tag definition. */
 interface Tag {
   /** Stable id (UUID); assignments reference this, never the text. */
@@ -93,6 +95,12 @@ declare function normalizeColor(input: unknown): string | null;
  * @returns a `#rrggbb` color.
  */
 declare function nextPaletteColor(tags: readonly Tag[]): string;
+/**
+ * Pick the first unused picker preset, falling back to cycling.
+ * @param tags - current tags.
+ * @returns a `#rrggbb` colour.
+ */
+declare function nextPickerColor(tags: readonly Tag[]): string;
 /** @returns a stable tag id (UUID when the platform provides one). */
 declare function createTagId(): string;
 /** @returns the tags assigned to one workspace, in definition order. */
@@ -117,4 +125,4 @@ declare function sanitizeStoredState(value: unknown): TagState;
  * @returns the canonical payload or a stable failure code.
  */
 declare function validateWritePayload(value: unknown): TagWriteResult;
-export { CLIENT_ROUTE, MAX_TAGS, MAX_TAG_ID, MAX_TAG_TEXT, PANEL_ID, ROUTE_PATH, TAG_PALETTE, TAG_STATE_SCHEMA_VERSION, Tag, TagPayload, TagState, TagWriteErrorCode, TagWriteFailure, TagWriteResult, TagWriteSuccess, createTagId, emptyState, isRecord, nextPaletteColor, normalizeColor, normalizeTagText, nowIso, sanitizeStoredState, tagKey, tagTextLength, tagsForWorkspace, validateWritePayload, workspaceMatchesFilter };
+export { CLIENT_ROUTE, MAX_TAGS, MAX_TAG_ID, MAX_TAG_TEXT, PANEL_ID, PICKER_PALETTE, ROUTE_PATH, TAG_PALETTE, TAG_STATE_SCHEMA_VERSION, Tag, TagPayload, TagState, TagWriteErrorCode, TagWriteFailure, TagWriteResult, TagWriteSuccess, createTagId, emptyState, isRecord, nextPaletteColor, nextPickerColor, normalizeColor, normalizeTagText, nowIso, sanitizeStoredState, tagKey, tagTextLength, tagsForWorkspace, validateWritePayload, workspaceMatchesFilter };

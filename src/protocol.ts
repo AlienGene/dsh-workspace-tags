@@ -45,6 +45,16 @@ export const TAG_PALETTE = [
   '#64748b',
 ] as const
 
+/** Six preset colours offered by the workspace annotation picker. */
+export const PICKER_PALETTE = [
+  '#ef4444',
+  '#f59e0b',
+  '#22c55e',
+  '#3b82f6',
+  '#a855f7',
+  '#64748b',
+] as const
+
 /** One durable tag definition. */
 export interface Tag {
   /** Stable id (UUID); assignments reference this, never the text. */
@@ -168,6 +178,18 @@ export function nextPaletteColor(tags: readonly Tag[]): string {
   for (const color of TAG_PALETTE) if (!used.has(color)) return color
   const index = tags.length % TAG_PALETTE.length
   return TAG_PALETTE[index] ?? TAG_PALETTE[0]
+}
+
+/**
+ * Pick the first unused picker preset, falling back to cycling.
+ * @param tags - current tags.
+ * @returns a `#rrggbb` colour.
+ */
+export function nextPickerColor(tags: readonly Tag[]): string {
+  const used = new Set(tags.map((tag) => tag.color))
+  for (const color of PICKER_PALETTE) if (!used.has(color)) return color
+  const index = tags.length % PICKER_PALETTE.length
+  return PICKER_PALETTE[index] ?? PICKER_PALETTE[0]
 }
 
 /** @returns a stable tag id (UUID when the platform provides one). */

@@ -9,7 +9,7 @@
  */
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Button, Input } from '@deepseek-ai/dsh-client-ui-primitives'
-import { nextPaletteColor, tagKey } from '../../protocol.ts'
+import { PICKER_PALETTE, nextPickerColor, tagKey } from '../../protocol.ts'
 import { AnchorPanel } from './AnchorPanel.tsx'
 import { CheckGlyph } from './icons.tsx'
 import { nameErrorMessage } from './messages.ts'
@@ -33,14 +33,16 @@ export interface TagPickerPanelProps {
 export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, closePicker }: TagPickerPanelProps): ReactNode {
   const picker = snapshot.picker
   const [draft, setDraft] = useState('')
-  const [color, setColor] = useState<string>(() => nextPaletteColor(snapshot.tags))
+  const [color, setColor] = useState<string>(() => nextPickerColor(snapshot.tags))
+  const [customOpen, setCustomOpen] = useState(false)
   const [error, setError] = useState<TagNameErrorCode | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     setDraft('')
     setError(null)
-    setColor(nextPaletteColor(snapshot.tags))
+    setColor(nextPickerColor(snapshot.tags))
+    setCustomOpen(false)
   }, [picker])
 
   useEffect(() => {
@@ -62,7 +64,8 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
       assign(picker.workspaceId, result.tag.id, true)
       setDraft('')
       setError(null)
-      setColor(nextPaletteColor([...snapshot.tags, result.tag]))
+      setColor(nextPickerColor([...snapshot.tags, result.tag]))
+      setCustomOpen(false)
       return
     }
     if (result.code === 'duplicate') {
@@ -104,15 +107,48 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
             }}
           />
         </div>
-        <input
-          type="color"
-          className="dshwt-color-input"
-          aria-label={t('page.color')}
-          title={t('page.color')}
-          value={color}
-          onChange={(event) => setColor(event.target.value)}
-        />
       </div>
+      <div className="dshwt-picker-colors" role="group" aria-label={t('page.color')}>
+        {PICKER_PALETTE.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            className="dshwt-picker-swatch"
+            data-dshwt-picker-color={preset}
+            style={{ '--dshwt-color': preset } as CSSProperties}
+            aria-label={preset}
+            title={preset}
+            aria-pressed={!customOpen && color === preset}
+            onClick={() => {
+              setColor(preset)
+              setCustomOpen(false)
+            }}
+          />
+        ))}
+        <button
+          type="button"
+          className="dshwt-picker-custom"
+          data-dshwt-picker-custom=""
+          aria-pressed={customOpen}
+          aria-expanded={customOpen}
+          onClick={() => setCustomOpen((value) => !value)}
+        >
+          <span className="dshwt-picker-custom-dot" aria-hidden="true" />
+          {t('picker.custom')}
+        </button>
+      </div>
+      {customOpen ? (
+        <div className="dshwt-picker-custom-row">
+          <input
+            type="color"
+            className="dshwt-color-input"
+            aria-label={t('page.color')}
+            value={color}
+            onChange={(event) => setColor(event.target.value)}
+          />
+          <span className="dshwt-picker-custom-hint">{t('picker.customHint')}</span>
+        </div>
+      ) : null}
       {error !== null ? <div className="dshwt-error" role="alert">{nameErrorMessage(error, t)}</div> : null}
       {snapshot.tags.length === 0 ? (
         <div className="dshwt-panel-hint">{t('picker.empty')}</div>

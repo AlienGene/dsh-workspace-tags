@@ -36,6 +36,8 @@ window.__ModuleLoader__.load({
 			"picker.clear": "清除",
 			"picker.done": "完成",
 			"picker.empty": "还没有标签，输入名称回车即可创建。",
+			"picker.custom": "自定义",
+			"picker.customHint": "选择自定义颜色",
 			"filter.label": "按标签筛选",
 			"filter.reset": "重置",
 			"filter.count": "已选 {count} 个标签",
@@ -85,6 +87,8 @@ window.__ModuleLoader__.load({
 			"picker.clear": "Clear",
 			"picker.done": "Done",
 			"picker.empty": "No tags yet. Type a name and press Enter to create one.",
+			"picker.custom": "Custom",
+			"picker.customHint": "Pick a custom colour",
 			"filter.label": "Filter by tag",
 			"filter.reset": "Reset",
 			"filter.count": "{count} tags selected",
@@ -123,6 +127,15 @@ window.__ModuleLoader__.load({
 			"#6366f1",
 			"#a855f7",
 			"#ec4899",
+			"#64748b"
+		];
+		/** Six preset colours offered by the workspace annotation picker. */
+		const PICKER_PALETTE = [
+			"#ef4444",
+			"#f59e0b",
+			"#22c55e",
+			"#3b82f6",
+			"#a855f7",
 			"#64748b"
 		];
 		const COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
@@ -190,6 +203,17 @@ window.__ModuleLoader__.load({
 			for (const color of TAG_PALETTE) if (!used.has(color)) return color;
 			const index = tags.length % TAG_PALETTE.length;
 			return TAG_PALETTE[index] ?? TAG_PALETTE[0];
+		}
+		/**
+		* Pick the first unused picker preset, falling back to cycling.
+		* @param tags - current tags.
+		* @returns a `#rrggbb` colour.
+		*/
+		function nextPickerColor(tags) {
+			const used = new Set(tags.map((tag) => tag.color));
+			for (const color of PICKER_PALETTE) if (!used.has(color)) return color;
+			const index = tags.length % PICKER_PALETTE.length;
+			return PICKER_PALETTE[index] ?? PICKER_PALETTE[0];
 		}
 		/** @returns a stable tag id (UUID when the platform provides one). */
 		function createTagId() {
@@ -1215,6 +1239,15 @@ window.__ModuleLoader__.load({
 .dshwt-panel-hint{padding:8px;color:var(--dsw-alias-label-tertiary,#7a8494);font-size:12px;line-height:18px}
 .dshwt-panel-input-row{padding:2px 4px 6px;display:flex;align-items:center;gap:6px}
 .dshwt-panel-input-grow{flex:1;min-width:0;display:flex}
+.dshwt-picker-colors{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 4px 6px}
+.dshwt-picker-swatch{width:18px;height:18px;border-radius:50%;border:2px solid transparent;background:var(--dshwt-color);cursor:pointer;padding:0;flex:none}
+.dshwt-picker-swatch[aria-pressed="true"]{border-color:var(--dsw-alias-label-primary,#1f2328)}
+.dshwt-picker-custom{display:inline-flex;align-items:center;gap:4px;border:none;background:none;color:var(--dsw-alias-label-tertiary,#7a8494);font-size:11px;line-height:16px;padding:2px 4px;border-radius:4px;cursor:pointer;flex:none}
+.dshwt-picker-custom:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05));color:var(--dsw-alias-label-secondary,#5b6470)}
+.dshwt-picker-custom[aria-pressed="true"]{color:var(--dsw-alias-label-primary,#1f2328);background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05))}
+.dshwt-picker-custom-dot{width:14px;height:14px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,#ef4444,#f59e0b,#22c55e,#3b82f6,#a855f7,#ef4444);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.dshwt-picker-custom-row{display:flex;align-items:center;gap:6px;padding:0 4px 6px}
+.dshwt-picker-custom-hint{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary,#7a8494)}
 .dshwt-panel-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:2px;padding:6px 4px 2px;border-top:1px solid var(--dsw-alias-border-l3,#e3e7ee)}
 .dshwt-dialog-body{margin:0;color:var(--dsw-alias-label-secondary,#5b6470);font-size:13px;line-height:20px}
 .dshwt-panel-count{font-size:11px;color:var(--dsw-alias-label-tertiary,#7a8494);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1266,7 +1299,7 @@ window.__ModuleLoader__.load({
 		// src/client/dom/viewMenu.ts
 		const TAG_ICON = "<svg viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.8 3.2h4.3l6 6-3.9 3.9-6-6V3.2Z\"/><circle cx=\"5.3\" cy=\"5.7\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/></svg>";
 		const OUR_ITEM = "data-dshwt-group-item";
-		const OUR_BUTTON = "data-dshwt-group-by-tag";
+		const OUR_BUTTON = "data-dshwt-view-menu-tag";
 		const menus = /* @__PURE__ */ new WeakMap();
 		/**
 		* Keep the injected option in sync with the currently open view menu.
@@ -2238,13 +2271,15 @@ window.__ModuleLoader__.load({
 		function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, closePicker }) {
 			const picker = snapshot.picker;
 			const [draft, setDraft] = (0, react.useState)("");
-			const [color, setColor] = (0, react.useState)(() => nextPaletteColor(snapshot.tags));
+			const [color, setColor] = (0, react.useState)(() => nextPickerColor(snapshot.tags));
+			const [customOpen, setCustomOpen] = (0, react.useState)(false);
 			const [error, setError] = (0, react.useState)(null);
 			const inputRef = (0, react.useRef)(null);
 			(0, react.useEffect)(() => {
 				setDraft("");
 				setError(null);
-				setColor(nextPaletteColor(snapshot.tags));
+				setColor(nextPickerColor(snapshot.tags));
+				setCustomOpen(false);
 			}, [picker]);
 			(0, react.useEffect)(() => {
 				if (picker !== null) inputRef.current?.focus();
@@ -2262,7 +2297,8 @@ window.__ModuleLoader__.load({
 					assign(picker.workspaceId, result.tag.id, true);
 					setDraft("");
 					setError(null);
-					setColor(nextPaletteColor([...snapshot.tags, result.tag]));
+					setColor(nextPickerColor([...snapshot.tags, result.tag]));
+					setCustomOpen(false);
 					return;
 				}
 				if (result.code === "duplicate") {
@@ -2287,9 +2323,9 @@ window.__ModuleLoader__.load({
 						className: "dshwt-panel-title",
 						children: t("picker.title", { name: picker.title })
 					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 						className: "dshwt-panel-input-row",
-						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 							className: "dshwt-panel-input-grow",
 							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
 								ref: inputRef,
@@ -2306,15 +2342,50 @@ window.__ModuleLoader__.load({
 									submit();
 								}
 							})
-						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+						})
+					}),
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: "dshwt-picker-colors",
+						role: "group",
+						"aria-label": t("page.color"),
+						children: [PICKER_PALETTE.map((preset) => /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: "dshwt-picker-swatch",
+							"data-dshwt-picker-color": preset,
+							style: { "--dshwt-color": preset },
+							"aria-label": preset,
+							title: preset,
+							"aria-pressed": !customOpen && color === preset,
+							onClick: () => {
+								setColor(preset);
+								setCustomOpen(false);
+							}
+						}, preset)), /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("button", {
+							type: "button",
+							className: "dshwt-picker-custom",
+							"data-dshwt-picker-custom": "",
+							"aria-pressed": customOpen,
+							"aria-expanded": customOpen,
+							onClick: () => setCustomOpen((value) => !value),
+							children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+								className: "dshwt-picker-custom-dot",
+								"aria-hidden": "true"
+							}), t("picker.custom")]
+						})]
+					}),
+					customOpen ? /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
+						className: "dshwt-picker-custom-row",
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
 							type: "color",
 							className: "dshwt-color-input",
 							"aria-label": t("page.color"),
-							title: t("page.color"),
 							value: color,
 							onChange: (event) => setColor(event.target.value)
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
+							className: "dshwt-picker-custom-hint",
+							children: t("picker.customHint")
 						})]
-					}),
+					}) : null,
 					error !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 						className: "dshwt-error",
 						role: "alert",

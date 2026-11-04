@@ -16,7 +16,7 @@ import { SELECTORS } from './selectors.ts'
 const TAG_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 3.2h4.3l6 6-3.9 3.9-6-6V3.2Z"/><circle cx="5.3" cy="5.7" r=".9" fill="currentColor" stroke="none"/></svg>'
 
 const OUR_ITEM = 'data-dshwt-group-item'
-const OUR_BUTTON = 'data-dshwt-group-by-tag'
+const OUR_BUTTON = 'data-dshwt-view-menu-tag'
 
 interface MenuRefs {
   menu: HTMLElement

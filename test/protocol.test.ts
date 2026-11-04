@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   MAX_TAG_TEXT,
+  PICKER_PALETTE,
   TAG_PALETTE,
   nextPaletteColor,
+  nextPickerColor,
   normalizeColor,
   normalizeTagText,
   sanitizeStoredState,
@@ -54,6 +56,20 @@ describe('nextPaletteColor', () => {
   it('cycles when every color is used', () => {
     const tags = TAG_PALETTE.map((color, index) => tag(String(index), `t${String(index)}`, color))
     expect(nextPaletteColor(tags)).toBe(TAG_PALETTE[0])
+  })
+})
+
+describe('picker palette', () => {
+  it('offers exactly six presets', () => {
+    expect(PICKER_PALETTE).toHaveLength(6)
+    expect(new Set(PICKER_PALETTE).size).toBe(6)
+  })
+
+  it('prefers the first unused preset and cycles when all are used', () => {
+    expect(nextPickerColor([])).toBe(PICKER_PALETTE[0])
+    expect(nextPickerColor([tag('a', 'one', PICKER_PALETTE[0])])).toBe(PICKER_PALETTE[1])
+    const tags = PICKER_PALETTE.map((color, index) => tag(String(index), `t${String(index)}`, color))
+    expect(nextPickerColor(tags)).toBe(PICKER_PALETTE[0])
   })
 })
 
