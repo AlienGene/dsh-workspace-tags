@@ -66,6 +66,7 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
       setError(null)
       setColor(nextPickerColor([...snapshot.tags, result.tag]))
       setCustomOpen(false)
+      inputRef.current?.focus()
       return
     }
     if (result.code === 'duplicate') {
@@ -75,6 +76,7 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
         assign(picker.workspaceId, existing.id, true)
         setDraft('')
         setError(null)
+        inputRef.current?.focus()
         return
       }
     }
@@ -107,6 +109,9 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
             }}
           />
         </div>
+        <Button size="sm" variant="primary" data-dshwt-picker-create="" onClick={submit}>
+          {t('picker.create')}
+        </Button>
       </div>
       <div className="dshwt-picker-colors" role="group" aria-label={t('page.color')}>
         {PICKER_PALETTE.map((preset) => (
@@ -181,8 +186,8 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
         >
           {t('picker.clear')}
         </Button>
-        <Button size="sm" variant="primary" onClick={closePicker}>
-          {t('picker.done')}
+        <Button size="sm" variant="outline" onClick={closePicker}>
+          {t('picker.back')}
         </Button>
       </div>
     </AnchorPanel>
