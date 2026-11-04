@@ -1,5 +1,7 @@
 # 工作区标签 · dsh-workspace-tags
 
+中文 | [English](README.en.md)
+
 > 给 DeepSeek Harness 的左侧栏工作区加上彩色标签：项目名旁直接显示，按标签筛选，按标签分组，所有标签集中管理。
 
 [![CI](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml/badge.svg)](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml)
@@ -103,7 +105,15 @@ dsh plugin --profile web add https://github.com/AlienGene/dsh-workspace-tags/rel
   plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
-安装后重新打开 App。本地开发：
+安装后重新打开 App。
+
+### 插件市场
+
+DSH 的插件市场是**索引源**模式，没有内置的中央商店。插件包名 `dsh-workspace-tags` 已可用、发布准备就绪；发布到 npm 后，社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
+
+发布步骤、社区索引、推广清单详见 [docs/MARKETPLACE.md](docs/MARKETPLACE.md)。
+
+本地开发：
 
 ```sh
 pnpm install

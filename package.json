@@ -35,7 +35,9 @@
     "client",
     "cordis.patch.yml",
     "README.md",
+    "README.en.md",
     "LICENSE",
+    "docs",
     "screenshots.json",
     "assets"
   ],
