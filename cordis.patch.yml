@@ -1,0 +1,9 @@
+# dsh-workspace-tags bundle patch.
+#
+# One plain insert: the Loader row id is what profile overrides target, and the
+# row name is the package specifier. The web client module scan reads the
+# package's `dsh.client` declaration from this bare row, so this row is also
+# what gets `client/client.js` served to the browser.
+- insert:
+    - id: workspace-tags
+      name: 'dsh-workspace-tags'

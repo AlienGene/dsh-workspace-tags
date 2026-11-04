@@ -1,0 +1,24 @@
+# Dependencies, caches and local noise — never committed.
+node_modules/
+.DS_Store
+*.tsbuildinfo
+coverage/
+.e2e/
+.e2e-*/
+*.log
+.env
+.env.*
+.DS_Store
+tag-plugin/
+
+# NOTE: lib/ and client/ are deliberately NOT ignored. They are the tsdown
+# build output and are committed so a GitHub install
+# (`dsh plugin --profile web add github:AlienGene/dsh-workspace-tags`) gets a
+# working plugin without a build step. Run `npm run check` before committing.
+
+# pnpm store kept inside the workspace for sandboxed installs
+.pnpm-store/
+.pnpm-home/
+
+# local tool caches (sandboxed installs)
+.xdg-*/

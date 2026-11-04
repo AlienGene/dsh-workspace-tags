@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # typecheck + build + Vitest
+      - run: pnpm run check
+
+      # lib/ and client/ are committed for build-free GitHub installs; rebuild
+      # them here and fail when the committed output drifted from source.
+      - name: Build artifacts are up to date
+        run: git diff --exit-code -- lib client
