@@ -88,24 +88,27 @@ DeepSeek Harness 的工作区列表按项目名排列。项目一多，就很难
 
 ## 安装
 
-本仓库已提交构建产物（`lib/`、`client/`），GitHub 安装不需要本地构建。
+源码全部为 TypeScript；Release 附件 `dsh-workspace-tags.tgz` 由 CI 构建（内含 `lib/`、`client/`），安装不需要本地构建。
 
 ```sh
 # Web / CLI profile
-dsh plugin --profile web add github:AlienGene/dsh-workspace-tags
+dsh plugin --profile web add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
 桌面版使用 App 自带的 CLI，并先完全退出 App：
 
 ```sh
 "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
-  plugin --profile desktop add github:AlienGene/dsh-workspace-tags
+  plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
-安装后重新打开 App。本地开发时也可以安装目录：
+安装后重新打开 App。本地开发：
 
 ```sh
-dsh plugin --profile web add /path/to/dsh-workspace-tags
+pnpm install
+pnpm run build        # 生成 lib/ 与 client/
+pnpm pack             # 生成 dsh-workspace-tags-<version>.tgz
+dsh plugin --profile web add ./dsh-workspace-tags-<version>.tgz
 ```
 
 ## 使用
@@ -138,7 +141,7 @@ pnpm run test       # Vitest（协议 / 存储 / 路由 / Store / DOM / 分组 /
 pnpm run check      # typecheck + build + test
 ```
 
-源码全部为 TypeScript（`.ts` / `.tsx`），测试为 TypeScript + Vitest + jsdom。`lib/` 与 `client/` 是构建产物，**故意提交**以便 GitHub 直接安装；`npm run check` 之前不要手改。
+源码全部为 TypeScript（`.ts` / `.tsx`），测试为 TypeScript + Vitest + jsdom。`lib/` 与 `client/` 是 `pnpm run build` 生成的产物，**不提交到 Git**；发布时由 CI 打进 Release 附件。
 
 目录：
 
@@ -164,7 +167,7 @@ test/                      Vitest
 
 ## English overview
 
-`dsh-workspace-tags` adds colored tags to DeepSeek Harness workspace projects: chips beside project names (colored dot + colored border), an inline picker that turns typed text into a tag, a multi-select filter in the workspace header, a “By tag” grouping option in the view menu, and a dedicated Tags page above the sidebar’s More row. Tags are stored locally in `~/.dsh/storages/dsh_tags.json` through the authenticated `/api` route. Tested with DSH 0.2.1-rc.5. Source is TypeScript; the committed `lib/` and `client/` make GitHub installs build-free.
+`dsh-workspace-tags` adds colored tags to DeepSeek Harness workspace projects: chips beside project names (colored dot + colored border), an inline picker that turns typed text into a tag, a multi-select filter in the workspace header, a “By tag” grouping option in the view menu, and a dedicated Tags page above the sidebar’s More row. Tags are stored locally in `~/.dsh/storages/dsh_tags.json` through the authenticated `/api` route. Tested with DSH 0.2.1-rc.5. Source is TypeScript; each release ships a prebuilt tarball (`lib/` + `client/`), so installs need no local build.
 
 ## License
 

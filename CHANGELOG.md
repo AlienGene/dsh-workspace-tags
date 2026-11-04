@@ -2,6 +2,14 @@
 
 本项目的所有重要变更都记录在这里。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.3.0] - 2026-11-04
+
+### 变更
+
+- 源码与发布分离：仓库只保留 TypeScript 源码，`lib/`、`client/` 构建产物不再提交；Release 附件提供预构建 tarball，安装无需本地构建。
+- 安装命令改为 Release 附件 URL（`releases/latest/download/dsh-workspace-tags.tgz`）。
+- 兼容性以 DeepSeek Harness `0.2.1-rc.5` 为准（`engines.dsh`、开发依赖），源码与测试全部为 TypeScript。
+
 ## [0.2.1] - 2026-11-04
 
 ### 修复

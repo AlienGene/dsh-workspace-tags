@@ -27,8 +27,3 @@ jobs:
 
       # typecheck + build + Vitest
       - run: pnpm run check
-
-      # lib/ and client/ are committed for build-free GitHub installs; rebuild
-      # them here and fail when the committed output drifted from source.
-      - name: Build artifacts are up to date
-        run: git diff --exit-code -- lib client

@@ -36,23 +36,30 @@ jobs:
 
       - run: pnpm run check
 
+      - name: Package plugin
+        run: |
+          mkdir -p dist
+          pnpm pack --pack-destination dist
+          cp dist/dsh-workspace-tags-*.tgz dist/dsh-workspace-tags.tgz
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          files: dist/dsh-workspace-tags.tgz
           body: |
-            ## 安装
+            ## 安装（Release 附件，无需本地构建）
 
             ```sh
             # Web / CLI profile
-            dsh plugin --profile web add github:AlienGene/dsh-workspace-tags
+            dsh plugin --profile web add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
             ```
 
             桌面版请先完全退出 App，再用 App 自带 CLI 安装，然后重新打开：
 
             ```sh
             "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
-              plugin --profile desktop add github:AlienGene/dsh-workspace-tags
+              plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
             ```
 
-            已针对 DeepSeek Harness `0.2.1-rc.5` 验证。仓库内已提交 `lib/` 与 `client/` 构建产物，安装时不需要本地构建。
+            已针对 DeepSeek Harness `0.2.1-rc.5` 验证。源码全部为 TypeScript；该附件由 CI 构建并包含 `lib/`、`client/`，安装时不需要本地构建。
