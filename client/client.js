@@ -42,6 +42,15 @@ window.__ModuleLoader__.load({
 			"filter.none": "还没有标签",
 			"group.label": "按标签",
 			"group.untagged": "未标注",
+			"group.collapse": "收起",
+			"group.expand": "展开",
+			"group.clear.label": "取消",
+			"group.clear.aria": "取消「{name}」标签",
+			"group.clear.title": "取消标签「{name}」？",
+			"group.clear.body": "将从该分组的 {count} 个项目移除该标签。标签本身会保留，可稍后再次使用。",
+			"group.clear.confirm": "确认取消",
+			"group.clear.back": "返回",
+			"common.close": "关闭",
 			"row.add": "为「{name}」标注标签",
 			"row.tags": "标签",
 			"empty.filtered": "没有匹配所选标签的项目",
@@ -82,6 +91,15 @@ window.__ModuleLoader__.load({
 			"filter.none": "No tags yet",
 			"group.label": "By tag",
 			"group.untagged": "Untagged",
+			"group.collapse": "Collapse",
+			"group.expand": "Expand",
+			"group.clear.label": "Remove",
+			"group.clear.aria": "Remove tag \"{name}\"",
+			"group.clear.title": "Remove tag \"{name}\"?",
+			"group.clear.body": "This removes the tag from {count} projects in this group. The tag itself is kept and can be used again.",
+			"group.clear.confirm": "Remove",
+			"group.clear.back": "Back",
+			"common.close": "Close",
 			"row.add": "Tag \"{name}\"",
 			"row.tags": "Tags",
 			"empty.filtered": "No projects match the selected tags",
@@ -282,6 +300,8 @@ window.__ModuleLoader__.load({
 			groupByTag: false,
 			filterAnchor: null,
 			picker: null,
+			collapsedGroups: [],
+			groupClear: null,
 			revision: 0
 		};
 		/**
@@ -347,7 +367,9 @@ window.__ModuleLoader__.load({
 					tags: state.tags,
 					assignments: state.assignments,
 					revision: state.revision,
-					filter: snapshot.filter.filter((id) => tagIds.has(id))
+					filter: snapshot.filter.filter((id) => tagIds.has(id)),
+					collapsedGroups: snapshot.collapsedGroups.filter((key) => key === "untagged" || tagIds.has(key)),
+					groupClear: null
 				});
 			};
 			const addTag = (raw, color) => {
@@ -397,7 +419,9 @@ window.__ModuleLoader__.load({
 				set({
 					tags: snapshot.tags.filter((tag) => tag.id !== id),
 					assignments: withoutTag(snapshot.assignments, id),
-					filter: snapshot.filter.filter((candidate) => candidate !== id)
+					filter: snapshot.filter.filter((candidate) => candidate !== id),
+					collapsedGroups: snapshot.collapsedGroups.filter((key) => key !== id),
+					groupClear: snapshot.groupClear?.tagId === id ? null : snapshot.groupClear
 				});
 			};
 			const assign = (workspaceId, tagId, assigned) => {
@@ -462,6 +486,46 @@ window.__ModuleLoader__.load({
 				closePicker: () => {
 					if (snapshot.picker === null) return;
 					set({ picker: null });
+				},
+				toggleGroupCollapsed: (key) => {
+					const collapsedGroups = snapshot.collapsedGroups.includes(key) ? snapshot.collapsedGroups.filter((candidate) => candidate !== key) : [...snapshot.collapsedGroups, key];
+					set({ collapsedGroups });
+				},
+				requestGroupClear: (tagId, tagName, workspaceIds) => {
+					const unique = [...new Set(workspaceIds)];
+					if (unique.length === 0) return;
+					set({
+						groupClear: {
+							tagId,
+							tagName,
+							workspaceIds: unique
+						},
+						filterAnchor: null,
+						picker: null
+					});
+				},
+				dismissGroupClear: () => {
+					if (snapshot.groupClear === null) return;
+					set({ groupClear: null });
+				},
+				confirmGroupClear: () => {
+					const request = snapshot.groupClear;
+					if (request === null) return;
+					let changed = false;
+					const assignments = { ...snapshot.assignments };
+					for (const workspaceId of request.workspaceIds) {
+						const current = assignments[workspaceId];
+						if (current === void 0) continue;
+						const kept = current.filter((id) => id !== request.tagId);
+						if (kept.length === current.length) continue;
+						changed = true;
+						if (kept.length > 0) assignments[workspaceId] = kept;
+						else delete assignments[workspaceId];
+					}
+					set(changed ? {
+						assignments,
+						groupClear: null
+					} : { groupClear: null });
 				},
 				getSnapshot: () => snapshot,
 				subscribe: (listener) => {
@@ -871,12 +935,18 @@ window.__ModuleLoader__.load({
 			return row instanceof HTMLElement ? row : null;
 		}
 		// src/client/dom/grouping.ts
-		/** Marks a grouping header the plugin owns. */
+		/** Marks a grouping row the plugin owns. */
 		const GROUP_HEADER_ATTRIBUTE = "data-dshwt-tag-group";
 		/** Marks the tree while grouping is active. */
 		const GROUPING_ATTRIBUTE = "data-dshwt-group-by-tag";
+		/** Marks a group section as a member of a rendered tag group. */
+		const GROUP_MEMBER_ATTRIBUTE = "data-dshwt-tag-member";
+		/** Marks a member section whose group is collapsed. */
+		const GROUP_COLLAPSED_ATTRIBUTE = "data-dshwt-group-collapsed";
 		/** Stores the last rendered grouping signature so repaints are no-ops. */
 		const GROUP_SIGNATURE = "dshwtGroupSig";
+		/** The native-style disclosure chevron (rotated when expanded). */
+		const CHEVRON_SVG = "<svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 3 5 5-5 5\"/></svg>";
 		/**
 		* Apply the tag filter to every section, hiding visually only.
 		* @param tree - the workspace list tree.
@@ -919,10 +989,10 @@ window.__ModuleLoader__.load({
 			return views;
 		}
 		/**
-		* Render tag headers and visual order. No-op when the same layout is already
-		* present.
+		* Render tag group rows, visual order and collapse state. No-op when the same
+		* layout is already present.
 		* @param tree - the workspace list tree.
-		* @param state - tags, assignments and the grouping flag.
+		* @param state - tags, assignments, grouping flag and collapsed keys.
 		* @param views - result of {@link paintSections}.
 		* @param t - localized translator.
 		*/
@@ -931,6 +1001,7 @@ window.__ModuleLoader__.load({
 				clearGrouping(tree);
 				return;
 			}
+			const collapsed = new Set(state.collapsedGroups);
 			const visible = views.filter((view) => view.visible && !view.ownRowHidden && view.workspaceId !== "");
 			const tagIds = new Set(state.tags.map((tag) => tag.id));
 			const groups = state.tags.map((tag) => {
@@ -945,7 +1016,8 @@ window.__ModuleLoader__.load({
 				return !(state.assignments[view.workspaceId] ?? []).some((id) => tagIds.has(id));
 			});
 			const signature = [
-				"on",
+				"v2",
+				`collapsed:${[...collapsed].sort().join(",")}`,
 				...groups.map((group) => `${group.tag.id}:${group.tag.text}:${group.tag.color}:${group.members.map((m) => m.workspaceId).join(",")}`),
 				`untagged:${untagged.map((m) => m.workspaceId).join(",")}`,
 				t("group.untagged")
@@ -957,28 +1029,60 @@ window.__ModuleLoader__.load({
 			let order = 0;
 			const ordered = /* @__PURE__ */ new Set();
 			const doc = tree.ownerDocument;
-			const appendHeader = (key, label, color, count) => {
-				const header = doc.createElement("div");
-				header.setAttribute(GROUP_HEADER_ATTRIBUTE, "");
-				header.setAttribute("data-dshwt-group-key", key);
-				header.setAttribute("role", "presentation");
-				if (color === null) header.classList.add("dshwt-group-untagged");
-				else header.style.setProperty("--dshwt-color", color);
-				header.style.order = String(order);
+			const appendHeader = (key, label, color, count, isCollapsed) => {
+				const row = doc.createElement("div");
+				row.className = "dshwt-group-row";
+				row.setAttribute(GROUP_HEADER_ATTRIBUTE, "");
+				row.setAttribute("data-dshwt-group-key", key);
+				row.setAttribute("data-dshwt-group-toggle", "");
+				row.setAttribute("role", "treeitem");
+				row.setAttribute("tabindex", "0");
+				row.setAttribute("aria-expanded", String(!isCollapsed));
+				if (color === null) row.classList.add("dshwt-group-untagged");
+				else row.style.setProperty("--dshwt-color", color);
+				row.style.order = String(order);
 				order += 1;
+				const glyph = doc.createElement("span");
+				glyph.className = "dshwt-group-glyph";
 				const dot = doc.createElement("span");
 				dot.className = "dshwt-group-dot";
-				const name = doc.createElement("span");
-				name.className = "dshwt-group-label";
-				name.textContent = label;
+				const chevron = doc.createElement("span");
+				chevron.className = "dshwt-group-chevron";
+				chevron.innerHTML = CHEVRON_SVG;
+				glyph.append(dot, chevron);
+				const title = doc.createElement("span");
+				title.className = "dshwt-group-title";
+				title.textContent = label;
 				const counter = doc.createElement("span");
 				counter.className = "dshwt-group-count";
 				counter.textContent = String(count);
-				header.append(dot, name, counter);
-				tree.append(header);
+				row.append(glyph, title, counter);
+				if (key !== "untagged") {
+					const actions = doc.createElement("span");
+					actions.className = "dshwt-group-actions";
+					const clear = doc.createElement("button");
+					clear.type = "button";
+					clear.className = "dshwt-group-clear";
+					clear.setAttribute("data-dshwt-group-clear", "");
+					clear.textContent = t("group.clear.label");
+					const aria = t("group.clear.aria", { name: label });
+					clear.setAttribute("aria-label", aria);
+					clear.title = aria;
+					actions.append(clear);
+					row.append(actions);
+				}
+				tree.append(row);
+			};
+			const markMembers = (members, key) => {
+				const isCollapsed = collapsed.has(key);
+				for (const view of members) {
+					view.section.setAttribute(GROUP_MEMBER_ATTRIBUTE, "");
+					view.section.toggleAttribute(GROUP_COLLAPSED_ATTRIBUTE, isCollapsed);
+				}
 			};
 			for (const group of groups) {
-				appendHeader(group.tag.id, group.tag.text, group.tag.color, group.members.length);
+				appendHeader(group.tag.id, group.tag.text, group.tag.color, group.members.length, collapsed.has(group.tag.id));
+				markMembers(group.members, group.tag.id);
 				for (const view of group.members) {
 					view.section.style.order = String(order);
 					order += 1;
@@ -986,7 +1090,8 @@ window.__ModuleLoader__.load({
 				}
 			}
 			if (untagged.length > 0) {
-				appendHeader("untagged", t("group.untagged"), null, untagged.length);
+				appendHeader("untagged", t("group.untagged"), null, untagged.length, collapsed.has("untagged"));
+				markMembers(untagged, "untagged");
 				for (const view of untagged) {
 					view.section.style.order = String(order);
 					order += 1;
@@ -1000,7 +1105,7 @@ window.__ModuleLoader__.load({
 			}
 		}
 		/**
-		* Remove grouping headers, order and the tree marker.
+		* Remove grouping rows, order, member markers and collapse markers.
 		* @param tree - the workspace list tree.
 		*/
 		function clearGrouping(tree) {
@@ -1013,9 +1118,19 @@ window.__ModuleLoader__.load({
 				tree.removeAttribute(GROUPING_ATTRIBUTE);
 				changed = true;
 			}
-			for (const section of Array.from(tree.querySelectorAll(SELECTORS.groupSection))) if (section.style.order !== "") {
-				section.style.removeProperty("order");
-				changed = true;
+			for (const section of Array.from(tree.querySelectorAll(SELECTORS.groupSection))) {
+				if (section.style.order !== "") {
+					section.style.removeProperty("order");
+					changed = true;
+				}
+				if (section.hasAttribute(GROUP_MEMBER_ATTRIBUTE)) {
+					section.removeAttribute(GROUP_MEMBER_ATTRIBUTE);
+					changed = true;
+				}
+				if (section.hasAttribute(GROUP_COLLAPSED_ATTRIBUTE)) {
+					section.removeAttribute(GROUP_COLLAPSED_ATTRIBUTE);
+					changed = true;
+				}
 			}
 			if (changed || tree.dataset[GROUP_SIGNATURE] !== void 0) delete tree.dataset[GROUP_SIGNATURE];
 		}
@@ -1058,14 +1173,29 @@ window.__ModuleLoader__.load({
 /* ---------- grouping by tag (CSS order only; nodes never move) ---------- */
 [data-dshwt-group-by-tag]{display:flex;flex-direction:column}
 [data-dshwt-group-by-tag]>*{flex:none}
-[data-dshwt-group-by-tag]>[class*="_groupSection"]{margin-top:0!important}
-[data-dshwt-tag-group]{display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;margin:10px 0 2px;color:var(--dsw-alias-label-tertiary,#7a8494);font-size:12px;line-height:16px;min-width:0;box-sizing:border-box}
+[data-dshwt-group-by-tag]>[class*="_groupSection"]{margin-top:2px!important}
+[data-dshwt-tag-group]{display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;margin:8px 0 2px;border-radius:var(--dsw-radius-md,8px);color:var(--dsw-alias-label-primary,#1f2328);box-sizing:border-box;cursor:pointer;user-select:none;outline:none}
 [data-dshwt-tag-group]:first-child{margin-top:0}
-.dshwt-group-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--dshwt-color)}
+[data-dshwt-tag-group]:hover,[data-dshwt-tag-group]:focus-visible{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05))}
+[data-dshwt-tag-group]:focus-visible{box-shadow:inset 0 0 0 2px var(--dsw-alias-state-business-primary,#3b82f6)}
+.dshwt-group-glyph{width:16px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--dsw-alias-label-caption,#9aa3b2)}
+.dshwt-group-dot{width:9px;height:9px;border-radius:50%;background:var(--dshwt-color);flex:none}
+.dshwt-group-chevron{display:none;align-items:center;justify-content:center;color:var(--dshwt-color,var(--dsw-alias-label-caption,#9aa3b2));transition:transform .15s var(--ds-ease-in-out,ease)}
+[data-dshwt-tag-group]:hover .dshwt-group-dot,[data-dshwt-tag-group]:focus-visible .dshwt-group-dot{display:none}
+[data-dshwt-tag-group]:hover .dshwt-group-chevron,[data-dshwt-tag-group]:focus-visible .dshwt-group-chevron{display:inline-flex}
+[data-dshwt-tag-group][aria-expanded="false"] .dshwt-group-dot{display:none}
+[data-dshwt-tag-group][aria-expanded="false"] .dshwt-group-chevron{display:inline-flex}
+[data-dshwt-tag-group][aria-expanded="true"] .dshwt-group-chevron{transform:rotate(90deg)}
+.dshwt-group-title{flex:1;min-width:0;font-size:14px;line-height:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dshwt-group-untagged .dshwt-group-dot{background:transparent;border:1px solid var(--dsw-alias-border-l4,#c6ccd6);box-sizing:border-box}
-.dshwt-group-label{font-weight:600;color:var(--dsw-alias-label-secondary,#5b6470);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dshwt-group-untagged .dshwt-group-label{font-weight:500;color:var(--dsw-alias-label-tertiary,#7a8494)}
-.dshwt-group-count{margin-left:auto;font-size:11px;color:var(--dsw-alias-label-tertiary,#7a8494);flex:none}
+.dshwt-group-untagged .dshwt-group-title{color:var(--dsw-alias-label-tertiary,#7a8494)}
+.dshwt-group-count{font-size:12px;line-height:16px;color:var(--dsw-alias-label-tertiary,#7a8494);flex:none}
+.dshwt-group-actions{display:none;align-items:center;gap:4px;flex:none}
+[data-dshwt-tag-group]:hover .dshwt-group-actions,[data-dshwt-tag-group]:focus-within .dshwt-group-actions{display:inline-flex}
+.dshwt-group-clear{border:none;background:none;color:var(--dsw-alias-label-tertiary,#7a8494);font-size:11px;line-height:16px;padding:2px 4px;border-radius:4px;cursor:pointer;flex:none}
+.dshwt-group-clear:hover{color:var(--dsw-alias-label-error,#d33);background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.05))}
+[data-dshwt-tag-member]{--dsh-workspace-indent:12px!important}
+[data-dshwt-group-collapsed]{display:none!important}
 
 /* ---------- filtered-empty notice ---------- */
 .dshwt-list-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 16px;color:var(--dsw-alias-label-tertiary,#7a8494);font-size:12px;line-height:18px;text-align:center}
@@ -1084,7 +1214,9 @@ window.__ModuleLoader__.load({
 .dshwt-panel-check{flex:none;display:inline-flex;color:var(--dsw-alias-state-business-primary,#3b82f6)}
 .dshwt-panel-hint{padding:8px;color:var(--dsw-alias-label-tertiary,#7a8494);font-size:12px;line-height:18px}
 .dshwt-panel-input-row{padding:2px 4px 6px;display:flex;align-items:center;gap:6px}
+.dshwt-panel-input-grow{flex:1;min-width:0;display:flex}
 .dshwt-panel-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:2px;padding:6px 4px 2px;border-top:1px solid var(--dsw-alias-border-l3,#e3e7ee)}
+.dshwt-dialog-body{margin:0;color:var(--dsw-alias-label-secondary,#5b6470);font-size:13px;line-height:20px}
 .dshwt-panel-count{font-size:11px;color:var(--dsw-alias-label-tertiary,#7a8494);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- tag page ---------- */
@@ -1306,6 +1438,7 @@ window.__ModuleLoader__.load({
 			let scheduled = false;
 			let applying = false;
 			let disposed = false;
+			let pendingGroupFocusKey = null;
 			const schedule = () => {
 				if (scheduled || disposed) return;
 				scheduled = true;
@@ -1323,6 +1456,22 @@ window.__ModuleLoader__.load({
 				const anchorElement = anchor.hasAttribute(ADD_ATTRIBUTE) ? row : anchor;
 				store.openPicker(workspaceId, title !== void 0 && title.length > 0 ? title : workspaceId, anchorElement);
 				schedule();
+			};
+			/** @returns the workspace ids whose earliest tag is `key` (the whole group). */
+			const groupMembers = (tree, key) => {
+				const state = store.getSnapshot();
+				const tagIds = new Set(state.tags.map((tag) => tag.id));
+				const members = [];
+				const seen = /* @__PURE__ */ new Set();
+				for (const section of Array.from(tree.querySelectorAll(SELECTORS.groupSection))) {
+					const row = ownWorkspaceRow(section);
+					const workspaceId = row === null ? null : workspaceIdOf(row);
+					if (workspaceId === null || workspaceId === "" || seen.has(workspaceId)) continue;
+					if ((state.assignments[workspaceId] ?? []).find((id) => tagIds.has(id)) !== key) continue;
+					seen.add(workspaceId);
+					members.push(workspaceId);
+				}
+				return members;
 			};
 			const onClick = (event) => {
 				const target = event.target;
@@ -1343,12 +1492,54 @@ window.__ModuleLoader__.load({
 					schedule();
 					return;
 				}
+				const clear = target.closest("[data-dshwt-group-clear]");
+				if (clear !== null) {
+					event.preventDefault();
+					event.stopPropagation();
+					const key = clear.closest("[data-dshwt-tag-group]")?.getAttribute("data-dshwt-group-key");
+					const root = findSidebarRoot(doc);
+					const tree = root === null ? null : findTree(root);
+					if (typeof key === "string" && key !== "untagged" && tree !== null) {
+						const name = store.getSnapshot().tags.find((tag) => tag.id === key)?.text;
+						const members = groupMembers(tree, key);
+						if (members.length > 0) store.requestGroupClear(key, name ?? key, members);
+						schedule();
+					}
+					return;
+				}
+				const toggle = target.closest("[data-dshwt-group-toggle]");
+				if (toggle !== null) {
+					event.preventDefault();
+					event.stopPropagation();
+					const key = toggle.getAttribute("data-dshwt-group-key");
+					if (key !== null) {
+						pendingGroupFocusKey = key;
+						store.toggleGroupCollapsed(key);
+						schedule();
+					}
+					return;
+				}
 				const add = target.closest(`[${ADD_ATTRIBUTE}], [data-dshwt-chip]`);
 				if (add !== null) {
 					event.preventDefault();
 					event.stopPropagation();
 					openPickerFor(add);
 				}
+			};
+			const onKeyDown = (event) => {
+				if (event.key !== "Enter" && event.key !== " ") return;
+				const target = event.target;
+				if (!(target instanceof Element)) return;
+				const toggle = target.closest("[data-dshwt-group-toggle]");
+				if (toggle === null) return;
+				if (target.closest("[data-dshwt-group-clear]") !== null) return;
+				const key = toggle.getAttribute("data-dshwt-group-key");
+				if (key === null) return;
+				event.preventDefault();
+				event.stopPropagation();
+				pendingGroupFocusKey = key;
+				store.toggleGroupCollapsed(key);
+				schedule();
 			};
 			const isRelevant = (record) => {
 				const root = findSidebarRoot(doc);
@@ -1465,6 +1656,11 @@ window.__ModuleLoader__.load({
 					if (tree !== null && !flat) {
 						const views = paintSections(tree, state, state.filter);
 						paintGrouping(tree, state, views, t);
+						if (pendingGroupFocusKey !== null) {
+							const key = pendingGroupFocusKey;
+							pendingGroupFocusKey = null;
+							tree.querySelector(`[data-dshwt-tag-group][data-dshwt-group-key="${key}"]`)?.focus();
+						}
 						const visibleProjects = views.filter((view) => view.visible && !view.ownRowHidden && view.workspaceId !== "").length;
 						syncEmptyNotice(tree, state.filter.length > 0 && views.length > 0 && visibleProjects === 0);
 					} else if (tree !== null) {
@@ -1482,6 +1678,7 @@ window.__ModuleLoader__.load({
 					if (disposed) return;
 					ensurePluginStyles(doc);
 					doc.addEventListener("click", onClick, true);
+					doc.addEventListener("keydown", onKeyDown, true);
 					unsubscribe = store.subscribe(schedule);
 					observer = new MutationObserver((records) => {
 						if (applying || disposed) return;
@@ -1501,11 +1698,14 @@ window.__ModuleLoader__.load({
 					unsubscribe?.();
 					unsubscribe = null;
 					doc.removeEventListener("click", onClick, true);
+					doc.removeEventListener("keydown", onKeyDown, true);
 					for (const node of Array.from(doc.querySelectorAll("[data-dshwt-chips],[data-dshwt-add],[data-dshwt-filter],[data-dshwt-tag-group],[data-dshwt-list-empty],[data-dshwt-group-item]"))) node.remove();
-					for (const node of Array.from(doc.querySelectorAll("[data-dshwt-hidden],[data-dshwt-self-hidden],[data-dshwt-picker-open]"))) {
+					for (const node of Array.from(doc.querySelectorAll("[data-dshwt-hidden],[data-dshwt-self-hidden],[data-dshwt-picker-open],[data-dshwt-tag-member],[data-dshwt-group-collapsed]"))) {
 						node.removeAttribute("data-dshwt-hidden");
 						node.removeAttribute("data-dshwt-self-hidden");
 						node.removeAttribute("data-dshwt-picker-open");
+						node.removeAttribute("data-dshwt-tag-member");
+						node.removeAttribute("data-dshwt-group-collapsed");
 					}
 					for (const section of Array.from(doc.querySelectorAll(SELECTORS.groupSection))) section.style.removeProperty("order");
 					for (const tree of Array.from(doc.querySelectorAll(SELECTORS.tree))) {
@@ -1861,6 +2061,34 @@ window.__ModuleLoader__.load({
 		function TagsPanelIcon({ size }) {
 			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TagGlyph, { size });
 		}
+		// src/client/components/GroupClearDialog.tsx
+		/**
+		* @param props - snapshot plus the confirm/dismiss actions.
+		* @returns the dialog, or null while no request is pending.
+		*/
+		function GroupClearDialog({ snapshot, t, onDismiss, onConfirm }) {
+			const request = snapshot.groupClear;
+			if (request === null) return null;
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Modal, {
+				open: true,
+				onClose: onDismiss,
+				title: t("group.clear.title", { name: request.tagName }),
+				closeLabel: t("common.close"),
+				footer: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+					variant: "outline",
+					onClick: onDismiss,
+					children: t("group.clear.back")
+				}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
+					variant: "primary",
+					onClick: onConfirm,
+					children: t("group.clear.confirm")
+				})] }),
+				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("p", {
+					className: "dshwt-dialog-body",
+					children: t("group.clear.body", { count: request.workspaceIds.length })
+				})
+			});
+		}
 		// src/client/components/AnchorPanel.tsx
 		/**
 		* A small anchored floating panel used by the tag filter and the annotation
@@ -2010,11 +2238,13 @@ window.__ModuleLoader__.load({
 		function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, closePicker }) {
 			const picker = snapshot.picker;
 			const [draft, setDraft] = (0, react.useState)("");
+			const [color, setColor] = (0, react.useState)(() => nextPaletteColor(snapshot.tags));
 			const [error, setError] = (0, react.useState)(null);
 			const inputRef = (0, react.useRef)(null);
 			(0, react.useEffect)(() => {
 				setDraft("");
 				setError(null);
+				setColor(nextPaletteColor(snapshot.tags));
 			}, [picker]);
 			(0, react.useEffect)(() => {
 				if (picker !== null) inputRef.current?.focus();
@@ -2027,11 +2257,12 @@ window.__ModuleLoader__.load({
 					setError("empty");
 					return;
 				}
-				const result = addTag(value);
+				const result = addTag(value, color);
 				if (result.ok) {
 					assign(picker.workspaceId, result.tag.id, true);
 					setDraft("");
 					setError(null);
+					setColor(nextPaletteColor([...snapshot.tags, result.tag]));
 					return;
 				}
 				if (result.code === "duplicate") {
@@ -2056,23 +2287,33 @@ window.__ModuleLoader__.load({
 						className: "dshwt-panel-title",
 						children: t("picker.title", { name: picker.title })
 					}),
-					/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+					/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: "dshwt-panel-input-row",
-						children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-							ref: inputRef,
-							value: draft,
-							placeholder: t("picker.placeholder"),
-							"aria-label": t("picker.placeholder"),
-							onChange: (event) => {
-								setDraft(event.target.value);
-								if (error !== null) setError(null);
-							},
-							onKeyDown: (event) => {
-								if (event.key !== "Enter") return;
-								event.preventDefault();
-								submit();
-							}
-						})
+						children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
+							className: "dshwt-panel-input-grow",
+							children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+								ref: inputRef,
+								value: draft,
+								placeholder: t("picker.placeholder"),
+								"aria-label": t("picker.placeholder"),
+								onChange: (event) => {
+									setDraft(event.target.value);
+									if (error !== null) setError(null);
+								},
+								onKeyDown: (event) => {
+									if (event.key !== "Enter") return;
+									event.preventDefault();
+									submit();
+								}
+							})
+						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)("input", {
+							type: "color",
+							className: "dshwt-color-input",
+							"aria-label": t("page.color"),
+							title: t("page.color"),
+							value: color,
+							onChange: (event) => setColor(event.target.value)
+						})]
 					}),
 					error !== null ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)("div", {
 						className: "dshwt-error",
@@ -2133,20 +2374,29 @@ window.__ModuleLoader__.load({
 		*/
 		function TagsOverlay(props) {
 			const snapshot = props.useTags((state) => state);
-			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TagFilterPanel, {
-				snapshot,
-				t: props.t,
-				toggleFilter: props.toggleFilter,
-				resetFilter: props.resetFilter,
-				closeFilter: props.closeFilter
-			}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(TagPickerPanel, {
-				snapshot,
-				t: props.t,
-				addTag: props.addTag,
-				assign: props.assign,
-				clearAssignments: props.clearAssignments,
-				closePicker: props.closePicker
-			})] });
+			return /* @__PURE__ */ (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
+				/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TagFilterPanel, {
+					snapshot,
+					t: props.t,
+					toggleFilter: props.toggleFilter,
+					resetFilter: props.resetFilter,
+					closeFilter: props.closeFilter
+				}),
+				/* @__PURE__ */ (0, react_jsx_runtime.jsx)(TagPickerPanel, {
+					snapshot,
+					t: props.t,
+					addTag: props.addTag,
+					assign: props.assign,
+					clearAssignments: props.clearAssignments,
+					closePicker: props.closePicker
+				}),
+				/* @__PURE__ */ (0, react_jsx_runtime.jsx)(GroupClearDialog, {
+					snapshot,
+					t: props.t,
+					onDismiss: props.dismissGroupClear,
+					onConfirm: props.confirmGroupClear
+				})
+			] });
 		}
 		// src/client/index.tsx
 		/**

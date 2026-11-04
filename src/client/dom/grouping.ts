@@ -3,6 +3,12 @@
  * (CSS `order` only). React keeps owning every node; this module never moves,
  * mounts or unmounts a React row.
  *
+ * The tag group row deliberately mirrors the native workspace row's format:
+ * 34px tall, the same padding/gap/hover, a 16px glyph slot (colour dot, swapped
+ * for a chevron on hover/focus), a single ellipsized title and a trailing action
+ * area. Its children are indented one level, like native workspace-tree
+ * children, via a scoped `--dsh-workspace-indent` override.
+ *
  * @module dsh-workspace-tags/client/dom/grouping
  */
 import type { TagState } from '../../protocol.ts'
@@ -21,14 +27,23 @@ export interface SectionView {
   ownRowHidden: boolean
 }
 
-/** Marks a grouping header the plugin owns. */
+/** Marks a grouping row the plugin owns. */
 const GROUP_HEADER_ATTRIBUTE = 'data-dshwt-tag-group'
 
 /** Marks the tree while grouping is active. */
 const GROUPING_ATTRIBUTE = 'data-dshwt-group-by-tag'
 
+/** Marks a group section as a member of a rendered tag group. */
+const GROUP_MEMBER_ATTRIBUTE = 'data-dshwt-tag-member'
+
+/** Marks a member section whose group is collapsed. */
+const GROUP_COLLAPSED_ATTRIBUTE = 'data-dshwt-group-collapsed'
+
 /** Stores the last rendered grouping signature so repaints are no-ops. */
 const GROUP_SIGNATURE = 'dshwtGroupSig'
+
+/** The native-style disclosure chevron (rotated when expanded). */
+const CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>'
 
 /**
  * Apply the tag filter to every section, hiding visually only.
@@ -76,16 +91,16 @@ export function paintSections(tree: HTMLElement, state: Pick<TagState, 'tags' | 
 }
 
 /**
- * Render tag headers and visual order. No-op when the same layout is already
- * present.
+ * Render tag group rows, visual order and collapse state. No-op when the same
+ * layout is already present.
  * @param tree - the workspace list tree.
- * @param state - tags, assignments and the grouping flag.
+ * @param state - tags, assignments, grouping flag and collapsed keys.
  * @param views - result of {@link paintSections}.
  * @param t - localized translator.
  */
 export function paintGrouping(
   tree: HTMLElement,
-  state: Pick<TagState, 'tags' | 'assignments'> & { groupByTag: boolean },
+  state: Pick<TagState, 'tags' | 'assignments'> & { groupByTag: boolean; collapsedGroups: readonly string[] },
   views: readonly SectionView[],
   t: Translate,
 ): void {
@@ -94,6 +109,7 @@ export function paintGrouping(
     return
   }
 
+  const collapsed = new Set(state.collapsedGroups)
   const visible = views.filter((view) => view.visible && !view.ownRowHidden && view.workspaceId !== '')
   const tagIds = new Set(state.tags.map((tag) => tag.id))
   const groups = state.tags.map((tag) => {
@@ -112,7 +128,8 @@ export function paintGrouping(
   })
 
   const signature = [
-    'on',
+    'v2',
+    `collapsed:${[...collapsed].sort().join(',')}`,
     ...groups.map((group) => `${group.tag.id}:${group.tag.text}:${group.tag.color}:${group.members.map((m) => m.workspaceId).join(',')}`),
     `untagged:${untagged.map((m) => m.workspaceId).join(',')}`,
     t('group.untagged'),
@@ -126,29 +143,68 @@ export function paintGrouping(
   let order = 0
   const ordered = new Set<HTMLElement>()
   const doc = tree.ownerDocument
-  const appendHeader = (key: string, label: string, color: string | null, count: number): void => {
-    const header = doc.createElement('div')
-    header.setAttribute(GROUP_HEADER_ATTRIBUTE, '')
-    header.setAttribute('data-dshwt-group-key', key)
-    header.setAttribute('role', 'presentation')
-    if (color === null) header.classList.add('dshwt-group-untagged')
-    else header.style.setProperty('--dshwt-color', color)
-    header.style.order = String(order)
+
+  const appendHeader = (key: string, label: string, color: string | null, count: number, isCollapsed: boolean): void => {
+    const row = doc.createElement('div')
+    row.className = 'dshwt-group-row'
+    row.setAttribute(GROUP_HEADER_ATTRIBUTE, '')
+    row.setAttribute('data-dshwt-group-key', key)
+    row.setAttribute('data-dshwt-group-toggle', '')
+    row.setAttribute('role', 'treeitem')
+    row.setAttribute('tabindex', '0')
+    row.setAttribute('aria-expanded', String(!isCollapsed))
+    if (color === null) row.classList.add('dshwt-group-untagged')
+    else row.style.setProperty('--dshwt-color', color)
+    row.style.order = String(order)
     order += 1
+
+    const glyph = doc.createElement('span')
+    glyph.className = 'dshwt-group-glyph'
     const dot = doc.createElement('span')
     dot.className = 'dshwt-group-dot'
-    const name = doc.createElement('span')
-    name.className = 'dshwt-group-label'
-    name.textContent = label
+    const chevron = doc.createElement('span')
+    chevron.className = 'dshwt-group-chevron'
+    chevron.innerHTML = CHEVRON_SVG
+    glyph.append(dot, chevron)
+
+    const title = doc.createElement('span')
+    title.className = 'dshwt-group-title'
+    title.textContent = label
     const counter = doc.createElement('span')
     counter.className = 'dshwt-group-count'
     counter.textContent = String(count)
-    header.append(dot, name, counter)
-    tree.append(header)
+
+    row.append(glyph, title, counter)
+
+    if (key !== 'untagged') {
+      const actions = doc.createElement('span')
+      actions.className = 'dshwt-group-actions'
+      const clear = doc.createElement('button')
+      clear.type = 'button'
+      clear.className = 'dshwt-group-clear'
+      clear.setAttribute('data-dshwt-group-clear', '')
+      clear.textContent = t('group.clear.label')
+      const aria = t('group.clear.aria', { name: label })
+      clear.setAttribute('aria-label', aria)
+      clear.title = aria
+      actions.append(clear)
+      row.append(actions)
+    }
+
+    tree.append(row)
+  }
+
+  const markMembers = (members: readonly SectionView[], key: string): void => {
+    const isCollapsed = collapsed.has(key)
+    for (const view of members) {
+      view.section.setAttribute(GROUP_MEMBER_ATTRIBUTE, '')
+      view.section.toggleAttribute(GROUP_COLLAPSED_ATTRIBUTE, isCollapsed)
+    }
   }
 
   for (const group of groups) {
-    appendHeader(group.tag.id, group.tag.text, group.tag.color, group.members.length)
+    appendHeader(group.tag.id, group.tag.text, group.tag.color, group.members.length, collapsed.has(group.tag.id))
+    markMembers(group.members, group.tag.id)
     for (const view of group.members) {
       view.section.style.order = String(order)
       order += 1
@@ -156,7 +212,8 @@ export function paintGrouping(
     }
   }
   if (untagged.length > 0) {
-    appendHeader('untagged', t('group.untagged'), null, untagged.length)
+    appendHeader('untagged', t('group.untagged'), null, untagged.length, collapsed.has('untagged'))
+    markMembers(untagged, 'untagged')
     for (const view of untagged) {
       view.section.style.order = String(order)
       order += 1
@@ -171,7 +228,7 @@ export function paintGrouping(
 }
 
 /**
- * Remove grouping headers, order and the tree marker.
+ * Remove grouping rows, order, member markers and collapse markers.
  * @param tree - the workspace list tree.
  */
 export function clearGrouping(tree: HTMLElement): void {
@@ -187,6 +244,14 @@ export function clearGrouping(tree: HTMLElement): void {
   for (const section of Array.from(tree.querySelectorAll<HTMLElement>(SELECTORS.groupSection))) {
     if (section.style.order !== '') {
       section.style.removeProperty('order')
+      changed = true
+    }
+    if (section.hasAttribute(GROUP_MEMBER_ATTRIBUTE)) {
+      section.removeAttribute(GROUP_MEMBER_ATTRIBUTE)
+      changed = true
+    }
+    if (section.hasAttribute(GROUP_COLLAPSED_ATTRIBUTE)) {
+      section.removeAttribute(GROUP_COLLAPSED_ATTRIBUTE)
       changed = true
     }
   }

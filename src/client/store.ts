@@ -39,6 +39,13 @@ export interface PickerTarget {
   anchor: HTMLElement
 }
 
+/** A pending "remove this tag from its whole group" request. */
+export interface GroupClearRequest {
+  tagId: string
+  tagName: string
+  workspaceIds: string[]
+}
+
 /** One immutable view of the browser state. */
 export interface ClientTagSnapshot {
   /** True once a durable document has been read. */
@@ -57,6 +64,10 @@ export interface ClientTagSnapshot {
   filterAnchor: HTMLElement | null
   /** Open annotation popover, if any. */
   picker: PickerTarget | null
+  /** Collapsed grouping keys: tag ids or the literal `untagged`. */
+  collapsedGroups: string[]
+  /** Pending destructive confirmation, if any. */
+  groupClear: GroupClearRequest | null
   /** Last revision seen from the Host. */
   revision: number
 }
@@ -81,6 +92,10 @@ export interface ClientTagActions {
   closeFilter(): void
   openPicker(workspaceId: string, title: string, anchor: HTMLElement): void
   closePicker(): void
+  toggleGroupCollapsed(key: string): void
+  requestGroupClear(tagId: string, tagName: string, workspaceIds: readonly string[]): void
+  dismissGroupClear(): void
+  confirmGroupClear(): void
 }
 
 /** The public store face. */
@@ -104,6 +119,8 @@ const EMPTY_SNAPSHOT: ClientTagSnapshot = {
   groupByTag: false,
   filterAnchor: null,
   picker: null,
+  collapsedGroups: [],
+  groupClear: null,
   revision: 0,
 }
 
@@ -162,6 +179,8 @@ export function createClientTagStore(): ClientTagStore {
       assignments: state.assignments,
       revision: state.revision,
       filter: snapshot.filter.filter((id) => tagIds.has(id)),
+      collapsedGroups: snapshot.collapsedGroups.filter((key) => key === 'untagged' || tagIds.has(key)),
+      groupClear: null,
     })
   }
 
@@ -197,6 +216,8 @@ export function createClientTagStore(): ClientTagStore {
       tags: snapshot.tags.filter((tag) => tag.id !== id),
       assignments: withoutTag(snapshot.assignments, id),
       filter: snapshot.filter.filter((candidate) => candidate !== id),
+      collapsedGroups: snapshot.collapsedGroups.filter((key) => key !== id),
+      groupClear: snapshot.groupClear?.tagId === id ? null : snapshot.groupClear,
     })
   }
 
@@ -259,6 +280,41 @@ export function createClientTagStore(): ClientTagStore {
     closePicker: () => {
       if (snapshot.picker === null) return
       set({ picker: null })
+    },
+    toggleGroupCollapsed: (key) => {
+      const collapsedGroups = snapshot.collapsedGroups.includes(key)
+        ? snapshot.collapsedGroups.filter((candidate) => candidate !== key)
+        : [...snapshot.collapsedGroups, key]
+      set({ collapsedGroups })
+    },
+    requestGroupClear: (tagId, tagName, workspaceIds) => {
+      const unique = [...new Set(workspaceIds)]
+      if (unique.length === 0) return
+      set({
+        groupClear: { tagId, tagName, workspaceIds: unique },
+        filterAnchor: null,
+        picker: null,
+      })
+    },
+    dismissGroupClear: () => {
+      if (snapshot.groupClear === null) return
+      set({ groupClear: null })
+    },
+    confirmGroupClear: () => {
+      const request = snapshot.groupClear
+      if (request === null) return
+      let changed = false
+      const assignments = { ...snapshot.assignments }
+      for (const workspaceId of request.workspaceIds) {
+        const current = assignments[workspaceId]
+        if (current === undefined) continue
+        const kept = current.filter((id) => id !== request.tagId)
+        if (kept.length === current.length) continue
+        changed = true
+        if (kept.length > 0) assignments[workspaceId] = kept
+        else delete assignments[workspaceId]
+      }
+      set(changed ? { assignments, groupClear: null } : { groupClear: null })
     },
   }
 

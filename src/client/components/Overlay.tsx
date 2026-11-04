@@ -7,6 +7,7 @@
  * @module dsh-workspace-tags/client/components/Overlay
  */
 import type { ReactNode } from 'react'
+import { GroupClearDialog } from './GroupClearDialog.tsx'
 import { TagFilterPanel } from './TagFilterPanel.tsx'
 import { TagPickerPanel } from './TagPickerPanel.tsx'
 import type { TagsOverlayProps } from './contract.ts'
@@ -33,6 +34,12 @@ export function TagsOverlay(props: TagsOverlayProps): ReactNode {
         assign={props.assign}
         clearAssignments={props.clearAssignments}
         closePicker={props.closePicker}
+      />
+      <GroupClearDialog
+        snapshot={snapshot}
+        t={props.t}
+        onDismiss={props.dismissGroupClear}
+        onConfirm={props.confirmGroupClear}
       />
     </>
   )

@@ -1,6 +1,6 @@
 {
   "name": "dsh-workspace-tags",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness plugin: tag Workspace projects with colored labels, filter the sidebar by tag, group workspaces by tag, and manage every tag in a dedicated page.",
   "keywords": [
     "dsh",

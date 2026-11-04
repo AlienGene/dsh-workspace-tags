@@ -19,6 +19,7 @@ import {
   findSidebarRoot,
   findTree,
   isRail,
+  ownWorkspaceRow,
   workspaceIdOf,
 } from './selectors.ts'
 import { syncViewMenu } from './viewMenu.ts'
@@ -58,6 +59,7 @@ export function createDomController(options: DomControllerOptions): DomControlle
   let scheduled = false
   let applying = false
   let disposed = false
+  let pendingGroupFocusKey: string | null = null
 
   const schedule = (): void => {
     if (scheduled || disposed) return
@@ -80,6 +82,25 @@ export function createDomController(options: DomControllerOptions): DomControlle
     const anchorElement = anchor.hasAttribute(ADD_ATTRIBUTE) ? row : anchor
     store.openPicker(workspaceId, title !== undefined && title.length > 0 ? title : workspaceId, anchorElement)
     schedule()
+  }
+
+  /** @returns the workspace ids whose earliest tag is `key` (the whole group). */
+  const groupMembers = (tree: HTMLElement, key: string): string[] => {
+    const state = store.getSnapshot()
+    const tagIds = new Set(state.tags.map((tag) => tag.id))
+    const members: string[] = []
+    const seen = new Set<string>()
+    for (const section of Array.from(tree.querySelectorAll<HTMLElement>(SELECTORS.groupSection))) {
+      const row = ownWorkspaceRow(section)
+      const workspaceId = row === null ? null : workspaceIdOf(row)
+      if (workspaceId === null || workspaceId === '' || seen.has(workspaceId)) continue
+      const assigned = state.assignments[workspaceId] ?? []
+      const first = assigned.find((id) => tagIds.has(id))
+      if (first !== key) continue
+      seen.add(workspaceId)
+      members.push(workspaceId)
+    }
+    return members
   }
 
   const onClick = (event: Event): void => {
@@ -105,12 +126,59 @@ export function createDomController(options: DomControllerOptions): DomControlle
       return
     }
 
+    const clear = target.closest<HTMLElement>('[data-dshwt-group-clear]')
+    if (clear !== null) {
+      event.preventDefault()
+      event.stopPropagation()
+      const header = clear.closest<HTMLElement>('[data-dshwt-tag-group]')
+      const key = header?.getAttribute('data-dshwt-group-key')
+      const root = findSidebarRoot(doc)
+      const tree = root === null ? null : findTree(root)
+      if (typeof key === 'string' && key !== 'untagged' && tree !== null) {
+        const state = store.getSnapshot()
+        const name = state.tags.find((tag) => tag.id === key)?.text
+        const members = groupMembers(tree, key)
+        if (members.length > 0) store.requestGroupClear(key, name ?? key, members)
+        schedule()
+      }
+      return
+    }
+
+    const toggle = target.closest<HTMLElement>('[data-dshwt-group-toggle]')
+    if (toggle !== null) {
+      event.preventDefault()
+      event.stopPropagation()
+      const key = toggle.getAttribute('data-dshwt-group-key')
+      if (key !== null) {
+        pendingGroupFocusKey = key
+        store.toggleGroupCollapsed(key)
+        schedule()
+      }
+      return
+    }
+
     const add = target.closest<HTMLElement>(`[${ADD_ATTRIBUTE}], [data-dshwt-chip]`)
     if (add !== null) {
       event.preventDefault()
       event.stopPropagation()
       openPickerFor(add)
     }
+  }
+
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const toggle = target.closest<HTMLElement>('[data-dshwt-group-toggle]')
+    if (toggle === null) return
+    if (target.closest('[data-dshwt-group-clear]') !== null) return
+    const key = toggle.getAttribute('data-dshwt-group-key')
+    if (key === null) return
+    event.preventDefault()
+    event.stopPropagation()
+    pendingGroupFocusKey = key
+    store.toggleGroupCollapsed(key)
+    schedule()
   }
 
   const isRelevant = (record: MutationRecord): boolean => {
@@ -254,6 +322,11 @@ export function createDomController(options: DomControllerOptions): DomControlle
       if (tree !== null && !flat) {
         const views = paintSections(tree, state, state.filter)
         paintGrouping(tree, state, views, t)
+        if (pendingGroupFocusKey !== null) {
+          const key = pendingGroupFocusKey
+          pendingGroupFocusKey = null
+          tree.querySelector<HTMLElement>(`[data-dshwt-tag-group][data-dshwt-group-key="${key}"]`)?.focus()
+        }
         const visibleProjects = views.filter((view) => view.visible && !view.ownRowHidden && view.workspaceId !== '').length
         syncEmptyNotice(tree, state.filter.length > 0 && views.length > 0 && visibleProjects === 0)
       } else if (tree !== null) {
@@ -273,6 +346,7 @@ export function createDomController(options: DomControllerOptions): DomControlle
       if (disposed) return
       ensurePluginStyles(doc)
       doc.addEventListener('click', onClick, true)
+      doc.addEventListener('keydown', onKeyDown, true)
       unsubscribe = store.subscribe(schedule)
       observer = new MutationObserver((records) => {
         if (applying || disposed) return
@@ -289,12 +363,15 @@ export function createDomController(options: DomControllerOptions): DomControlle
       unsubscribe?.()
       unsubscribe = null
       doc.removeEventListener('click', onClick, true)
+      doc.removeEventListener('keydown', onKeyDown, true)
       const owned = '[data-dshwt-chips],[data-dshwt-add],[data-dshwt-filter],[data-dshwt-tag-group],[data-dshwt-list-empty],[data-dshwt-group-item]'
       for (const node of Array.from(doc.querySelectorAll(owned))) node.remove()
-      for (const node of Array.from(doc.querySelectorAll('[data-dshwt-hidden],[data-dshwt-self-hidden],[data-dshwt-picker-open]'))) {
+      for (const node of Array.from(doc.querySelectorAll('[data-dshwt-hidden],[data-dshwt-self-hidden],[data-dshwt-picker-open],[data-dshwt-tag-member],[data-dshwt-group-collapsed]'))) {
         node.removeAttribute('data-dshwt-hidden')
         node.removeAttribute('data-dshwt-self-hidden')
         node.removeAttribute('data-dshwt-picker-open')
+        node.removeAttribute('data-dshwt-tag-member')
+        node.removeAttribute('data-dshwt-group-collapsed')
       }
       for (const section of Array.from(doc.querySelectorAll<HTMLElement>(SELECTORS.groupSection))) {
         section.style.removeProperty('order')

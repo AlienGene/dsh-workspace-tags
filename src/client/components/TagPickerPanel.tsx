@@ -9,7 +9,7 @@
  */
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Button, Input } from '@deepseek-ai/dsh-client-ui-primitives'
-import { tagKey } from '../../protocol.ts'
+import { nextPaletteColor, tagKey } from '../../protocol.ts'
 import { AnchorPanel } from './AnchorPanel.tsx'
 import { CheckGlyph } from './icons.tsx'
 import { nameErrorMessage } from './messages.ts'
@@ -33,12 +33,14 @@ export interface TagPickerPanelProps {
 export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, closePicker }: TagPickerPanelProps): ReactNode {
   const picker = snapshot.picker
   const [draft, setDraft] = useState('')
+  const [color, setColor] = useState<string>(() => nextPaletteColor(snapshot.tags))
   const [error, setError] = useState<TagNameErrorCode | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     setDraft('')
     setError(null)
+    setColor(nextPaletteColor(snapshot.tags))
   }, [picker])
 
   useEffect(() => {
@@ -55,11 +57,12 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
       setError('empty')
       return
     }
-    const result = addTag(value)
+    const result = addTag(value, color)
     if (result.ok) {
       assign(picker.workspaceId, result.tag.id, true)
       setDraft('')
       setError(null)
+      setColor(nextPaletteColor([...snapshot.tags, result.tag]))
       return
     }
     if (result.code === 'duplicate') {
@@ -84,20 +87,30 @@ export function TagPickerPanel({ snapshot, t, addTag, assign, clearAssignments, 
     >
       <div className="dshwt-panel-title">{t('picker.title', { name: picker.title })}</div>
       <div className="dshwt-panel-input-row">
-        <Input
-          ref={inputRef}
-          value={draft}
-          placeholder={t('picker.placeholder')}
-          aria-label={t('picker.placeholder')}
-          onChange={(event) => {
-            setDraft(event.target.value)
-            if (error !== null) setError(null)
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter') return
-            event.preventDefault()
-            submit()
-          }}
+        <div className="dshwt-panel-input-grow">
+          <Input
+            ref={inputRef}
+            value={draft}
+            placeholder={t('picker.placeholder')}
+            aria-label={t('picker.placeholder')}
+            onChange={(event) => {
+              setDraft(event.target.value)
+              if (error !== null) setError(null)
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return
+              event.preventDefault()
+              submit()
+            }}
+          />
+        </div>
+        <input
+          type="color"
+          className="dshwt-color-input"
+          aria-label={t('page.color')}
+          title={t('page.color')}
+          value={color}
+          onChange={(event) => setColor(event.target.value)}
         />
       </div>
       {error !== null ? <div className="dshwt-error" role="alert">{nameErrorMessage(error, t)}</div> : null}

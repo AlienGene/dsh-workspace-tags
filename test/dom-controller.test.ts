@@ -127,11 +127,14 @@ describe('dom decorator', () => {
     const headers = tree.querySelectorAll(':scope > [data-dshwt-tag-group]')
     expect(headers).toHaveLength(3)
     expect(headers[0]?.textContent).toContain('Work')
+    expect(headers[0]?.textContent).toContain('取消')
     expect(headers[2]?.textContent).toContain('未标注')
+    expect(headers[2]?.querySelector('[data-dshwt-group-clear]')).toBeNull()
     const w1 = document.querySelector('[data-row-key="workspace:w1"]')?.closest('[class*="_groupSection"]') as HTMLElement
     const w2 = document.querySelector('[data-row-key="workspace:w2"]')?.closest('[class*="_groupSection"]') as HTMLElement
     expect(w1.style.order).not.toBe('')
-    expect(w2.style.order).not.toBe('')
+    expect(w1.hasAttribute('data-dshwt-tag-member')).toBe(true)
+    expect(w2.hasAttribute('data-dshwt-tag-member')).toBe(true)
     expect(w1.style.order).not.toBe(w2.style.order)
     // The React-owned list is untouched: the same two sections remain children.
     expect(tree.querySelectorAll(':scope > [class*="_groupSection"]')).toHaveLength(4)
@@ -141,6 +144,50 @@ describe('dom decorator', () => {
     expect(tree.hasAttribute('data-dshwt-group-by-tag')).toBe(false)
     expect(tree.querySelectorAll('[data-dshwt-tag-group]')).toHaveLength(0)
     expect(w1.style.order).toBe('')
+    expect(w1.hasAttribute('data-dshwt-tag-member')).toBe(false)
+  })
+
+  it('collapses and expands one group without touching the native list', async () => {
+    const store = createClientTagStore()
+    store.hydrate(tagState({ tags, assignments: { w1: ['a'], w2: ['c'] }, revision: 1 }))
+    setup(store)
+    store.setGroupByTag(true)
+    await flush()
+
+    const header = document.querySelector<HTMLElement>('[data-dshwt-tag-group][data-dshwt-group-key="a"]')
+    const section = document.querySelector('[data-row-key="workspace:w1"]')?.closest('[class*="_groupSection"]') as HTMLElement
+    expect(header?.getAttribute('aria-expanded')).toBe('true')
+    header?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flush()
+    expect(store.getSnapshot().collapsedGroups).toEqual(['a'])
+    expect(section.hasAttribute('data-dshwt-group-collapsed')).toBe(true)
+    expect(document.querySelector<HTMLElement>('[data-dshwt-tag-group][data-dshwt-group-key="a"]')?.getAttribute('aria-expanded')).toBe('false')
+
+    document.querySelector<HTMLElement>('[data-dshwt-tag-group][data-dshwt-group-key="a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flush()
+    expect(store.getSnapshot().collapsedGroups).toEqual([])
+    expect(section.hasAttribute('data-dshwt-group-collapsed')).toBe(false)
+  })
+
+  it('requests a whole-group clear from the group row action', async () => {
+    const store = createClientTagStore()
+    store.hydrate(tagState({ tags, assignments: { w1: ['a'], w2: ['c'] }, revision: 1 }))
+    setup(store)
+    store.setGroupByTag(true)
+    await flush()
+
+    const clear = document.querySelector<HTMLButtonElement>('[data-dshwt-tag-group][data-dshwt-group-key="a"] [data-dshwt-group-clear]')
+    expect(clear).not.toBeNull()
+    clear?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flush()
+    expect(store.getSnapshot().groupClear).toEqual({ tagId: 'a', tagName: 'Work', workspaceIds: ['w1'] })
+    expect(store.getSnapshot().collapsedGroups).toEqual([])
+
+    store.confirmGroupClear()
+    await flush()
+    expect(store.getSnapshot().assignments).toEqual({ w2: ['c'] })
+    expect(store.getSnapshot().tags.map((tag) => tag.id)).toEqual(['a', 'b', 'c'])
+    expect(document.querySelector('[data-dshwt-tag-group][data-dshwt-group-key="a"]')).toBeNull()
   })
 
   it('degrades safely in flat and rail modes', async () => {
@@ -175,5 +222,7 @@ describe('dom decorator', () => {
     expect(document.querySelector('[data-dshwt-add]')).toBeNull()
     expect(document.querySelector('[data-dshwt-filter]')).toBeNull()
     expect(document.querySelector('[data-dshwt-tag-group]')).toBeNull()
+    expect(document.querySelector('[data-dshwt-tag-member]')).toBeNull()
+    expect(document.querySelector('[data-dshwt-group-collapsed]')).toBeNull()
   })
 })

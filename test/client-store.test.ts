@@ -134,4 +134,58 @@ describe('client tag store', () => {
     expect(store.revision()).toBe(1)
     expect(store.payload()).toEqual({ tags: store.getSnapshot().tags, assignments: {} })
   })
+  it('toggles group collapse and prunes removed tags on hydrate', () => {
+    const store = hydrated()
+    store.toggleGroupCollapsed('a')
+    store.toggleGroupCollapsed('untagged')
+    expect(store.getSnapshot().collapsedGroups).toEqual(['a', 'untagged'])
+    store.toggleGroupCollapsed('a')
+    expect(store.getSnapshot().collapsedGroups).toEqual(['untagged'])
+    store.hydrate(emptyState())
+    expect(store.getSnapshot().collapsedGroups).toEqual(['untagged'])
+  })
+
+  it('requests, dismisses and confirms a group clear', () => {
+    const store = createClientTagStore()
+    store.hydrate({
+      ...emptyState(),
+      tags: [
+        { id: 'a', text: 'Work', color: '#ef4444' },
+        { id: 'b', text: 'Home', color: '#22c55e' },
+      ],
+      assignments: { w1: ['a', 'b'], w2: ['a'], w3: ['b'] },
+      revision: 1,
+    })
+    store.requestGroupClear('a', 'Work', ['w1', 'w2', 'w2'])
+    expect(store.getSnapshot().groupClear).toEqual({ tagId: 'a', tagName: 'Work', workspaceIds: ['w1', 'w2'] })
+    store.dismissGroupClear()
+    expect(store.getSnapshot().groupClear).toBeNull()
+    expect(store.getSnapshot().assignments).toEqual({ w1: ['a', 'b'], w2: ['a'], w3: ['b'] })
+
+    store.requestGroupClear('a', 'Work', ['w1', 'w2'])
+    store.confirmGroupClear()
+    expect(store.getSnapshot().groupClear).toBeNull()
+    expect(store.getSnapshot().assignments).toEqual({ w1: ['b'], w3: ['b'] })
+    expect(store.getSnapshot().tags.map((tag) => tag.id)).toEqual(['a', 'b'])
+  })
+
+  it('closes open surfaces when a group clear is requested', () => {
+    const store = hydrated()
+    const anchor = document.createElement('button')
+    store.openFilter(anchor)
+    store.requestGroupClear('a', 'Work', ['w1'])
+    expect(store.getSnapshot().filterAnchor).toBeNull()
+    store.openPicker('w1', 'Aurora', anchor)
+    store.requestGroupClear('a', 'Work', ['w1'])
+    expect(store.getSnapshot().picker).toBeNull()
+  })
+
+  it('prunes collapse and pending clear state when the tag is removed', () => {
+    const store = hydrated()
+    store.toggleGroupCollapsed('a')
+    store.requestGroupClear('a', 'Work', ['w1'])
+    store.removeTag('a')
+    expect(store.getSnapshot().collapsedGroups).toEqual([])
+    expect(store.getSnapshot().groupClear).toBeNull()
+  })
 })
