@@ -2,6 +2,13 @@
 
 本项目的所有重要变更都记录在这里。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.3.2] - 2026-11-05
+
+### 变更
+
+- 英文文案的单复数修正：标签用量（Used by 1 project）与分组移除确认。
+- 英文 README 改用英文界面截图（`assets/en/`），X 推广素材同步为英文界面。
+
 ## [0.3.1] - 2026-11-04
 
 ### 变更

@@ -1,6 +1,6 @@
 # X 推广素材
 
-当前状态：GitHub Release **v0.3.1** 已发布；npm 包**尚未发布**（2FA 阻塞，见 `docs/MARKETPLACE.md`）。因此 X 主帖先链接 GitHub Release，安装回复使用 Release 附件。等 npm 发布后，再在回复里补 npm 与插件市场索引。
+当前状态：GitHub Release **v0.3.2** 已发布；npm 包**尚未发布**（2FA 阻塞，见 `docs/MARKETPLACE.md`）。因此 X 主帖先链接 GitHub Release，安装回复使用 Release 附件。等 npm 发布后，再在回复里补 npm 与插件市场索引。
 
 > 本环境没有 X 账号或 X API 凭证，无法代替你点击发布。下面的「一键打开 X 发帖窗口」链接需要你登录 X 后，**手动附上图片**再发布。若你希望我尝试 API 自动发帖，需要提供 X 开发者 App 的 user-context token（不推荐；OAuth 和 2FA 都更麻烦）。
 
@@ -10,8 +10,8 @@
 |---|---|---|---|
 | 主帖头图 | `assets/x-launch.png` | 1200×675 | DeepSeek Harness sidebar with colored workspace tag chips, next to a “Workspace Tags” title card |
 | 回复 1：标注 | `assets/x-picker.png` | 1600×900 | Annotation picker with six preset colors, a custom color control, Create and Back buttons |
-| 回复 2：筛选 | `assets/screenshot-filter.png` | 1600×900 | Tag filter dropdown with multi-select tags and a Reset button |
-| 回复 3：分组/取消 | `assets/screenshot-group-confirm.png` | 1600×900 | Confirmation dialog for removing a tag from an entire group |
+| 回复 2：筛选 | `assets/en/filter.png` | 1600×900 | Tag filter dropdown with multi-select tags and a Reset button |
+| 回复 3：分组/取消 | `assets/en/group-confirm.png` | 1600×900 | Confirmation dialog for removing a tag from an entire group |
 
 ## 主帖（English，253/280 加权字符）
 
@@ -55,7 +55,7 @@ Filter: multi-select union, a fixed Reset, and an empty state when nothing match
 Chips carry a color dot and a tag-colored border.
 ```
 
-Attach `assets/screenshot-filter.png`.
+Attach `assets/en/filter.png`.
 
 **Reply 3 — grouping**
 
@@ -64,7 +64,7 @@ Group by tag: native-format rows, collapse/expand, and remove a tag from the who
 Projects are grouped under their earliest tag.
 ```
 
-Attach `assets/screenshot-group-confirm.png`.
+Attach `assets/en/group-confirm.png`.
 
 **Reply 4 — install**
 

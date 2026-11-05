@@ -10,7 +10,7 @@
 | 包是否可直接发布 | 是：`prepack` 会构建，`files` 包含 `lib/`、`client/`，已声明 `dsh.bundle` 和 `dsh-plugin` 关键词 |
 | 当前安装方式 | GitHub Release 附件（`dsh-workspace-tags.tgz`），无需本地构建 |
 | 是否已进入 npm / 社区索引 | **尚未发布**；发布需要 npm token |
-| GitHub Release | v0.3.1 已发布，附件由 CI 构建 |
+| GitHub Release | v0.3.2 已发布，附件由 CI 构建 |
 
 ## 一、DSH 插件市场是怎么工作的
 

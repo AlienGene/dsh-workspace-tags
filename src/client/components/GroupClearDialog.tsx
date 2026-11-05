@@ -27,6 +27,7 @@ export interface GroupClearDialogProps {
 export function GroupClearDialog({ snapshot, t, onDismiss, onConfirm }: GroupClearDialogProps): ReactNode {
   const request = snapshot.groupClear
   if (request === null) return null
+  const count = request.workspaceIds.length
   return (
     <Modal
       open
@@ -45,7 +46,7 @@ export function GroupClearDialog({ snapshot, t, onDismiss, onConfirm }: GroupCle
       }
     >
       <p className="dshwt-dialog-body">
-        {t('group.clear.body', { count: request.workspaceIds.length })}
+        {t(count === 1 ? 'group.clear.bodyOne' : 'group.clear.body', { count })}
       </p>
     </Modal>
   )

@@ -183,7 +183,7 @@ function TagRow({ tag, usage, t, renameTag, recolorTag, removeTag }: TagRowProps
           {confirming ? (
             <span className="dshwt-usage">{t('page.deleteConfirm', { name: tag.text })}</span>
           ) : (
-            <span className="dshwt-usage">{t('page.usage', { count: usage })}</span>
+            <span className="dshwt-usage">{t(usage === 1 ? 'page.usageOne' : 'page.usage', { count: usage })}</span>
           )}
           {error !== null ? <div className="dshwt-error" role="alert">{nameErrorMessage(error, t)}</div> : null}
         </div>

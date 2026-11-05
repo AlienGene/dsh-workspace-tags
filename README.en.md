@@ -8,7 +8,7 @@ English | [中文](README.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
 
-![Workspace tags preview](assets/preview.png)
+![Workspace tags preview](assets/en/preview.png)
 
 ## Why
 
@@ -28,13 +28,13 @@ The screenshots below show the UI in Chinese; the plugin ships English strings a
 
 ### Colored tags beside project names
 
-![Sidebar tags](assets/screenshot-sidebar.png)
+![Sidebar tags](assets/en/sidebar.png)
 
 Tags appear to the right of the project name: the chip contains a **colored dot**, its **border uses the tag color**, and the label follows the dot. One chip is shown at most; the rest collapse into `+N`. Hover the chip to see every tag on that project.
 
 ### Inline tagging
 
-![Annotation picker](assets/screenshot-picker.png)
+![Annotation picker](assets/en/picker.png)
 
 Hover a workspace row and click the tag button at the end of the row (or click an existing chip) to open the picker:
 
@@ -44,11 +44,11 @@ Hover a workspace row and click the tag button at the end of the row (or click a
 - If the name already exists, the existing tag is assigned instead of creating a duplicate
 - Click a tag row to toggle its assignment; **Clear** removes all tags from that project
 
-![Custom color](assets/screenshot-picker-custom.png)
+![Custom color](assets/en/picker-custom.png)
 
 ### Filter by tag
 
-![Tag filter](assets/screenshot-filter.png)
+![Tag filter](assets/en/filter.png)
 
 A funnel icon appears in the workspace header once tags exist:
 
@@ -59,21 +59,21 @@ A funnel icon appears in the workspace header once tags exist:
 
 ### Group by tag
 
-![Group by tag](assets/screenshot-grouped.png)
+![Group by tag](assets/en/grouped.png)
 
 View options (the slider icon in the workspace header) → grouping → **By tag**. The menu entry uses the same layout as the native grouping options: icon on the left, label on the right.
 
-![Grouping menu](assets/screenshot-view-menu.png)
+![Grouping menu](assets/en/view-menu.png)
 
 The list is grouped in tag creation order. Group rows use the same format as native workspace rows (34px tall, dot/chevron, 14px bold tag name, project count); the projects under a group are indented one level. Untagged projects go to **Untagged**. Selecting any native grouping mode exits this mode.
 
 **Collapse**: click a group row (or press Enter/Space) to collapse/expand it. The row stays visible and keeps the count.
 
-![Collapsed group](assets/screenshot-group-collapsed.png)
+![Collapsed group](assets/en/group-collapsed.png)
 
 **Remove from group**: hover a group row and click **Remove**; after confirmation the tag is removed from every project in that group. The tag definition itself is kept and can be used again.
 
-![Remove tag from group](assets/screenshot-group-confirm.png)
+![Remove tag from group](assets/en/group-confirm.png)
 
 > A project appears once: with multiple tags it is grouped under the **earliest-created** tag (the chips still show all tags).
 >
@@ -81,7 +81,7 @@ The list is grouped in tag creation order. Group rows use the same format as nat
 
 ### Tags page
 
-![Tags page](assets/screenshot-tag-page.png)
+![Tags page](assets/en/tag-page.png)
 
 A **Tags** row is added above **More** in the sidebar panel list. It opens the tag manager:
 
