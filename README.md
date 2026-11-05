@@ -5,6 +5,7 @@
 > 给 DeepSeek Harness 的左侧栏工作区加上彩色标签：项目名旁直接显示，按标签筛选，按标签分组，所有标签集中管理。
 
 [![CI](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml/badge.svg)](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/dsh-workspace-tags)](https://www.npmjs.com/package/dsh-workspace-tags)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
 
@@ -91,6 +92,24 @@ DeepSeek Harness 的工作区列表按项目名排列。项目一多，就很难
 
 ## 安装
 
+### 从 npm 安装（推荐）
+
+```sh
+# Web / CLI profile
+dsh plugin --profile web add dsh-workspace-tags
+```
+
+桌面版使用 App 自带的 CLI，并先完全退出 App：
+
+```sh
+"/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
+  plugin --profile desktop add dsh-workspace-tags
+```
+
+安装后重新打开 App。
+
+### 从 Release 附件安装（离线 / 固定版本）
+
 源码全部为 TypeScript；Release 附件 `dsh-workspace-tags.tgz` 由 CI 构建（内含 `lib/`、`client/`），安装不需要本地构建。
 
 ```sh
@@ -98,18 +117,16 @@ DeepSeek Harness 的工作区列表按项目名排列。项目一多，就很难
 dsh plugin --profile web add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
-桌面版使用 App 自带的 CLI，并先完全退出 App：
+桌面版：
 
 ```sh
 "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
   plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
-安装后重新打开 App。
-
 ### 插件市场
 
-DSH 的插件市场是**索引源**模式，没有内置的中央商店。插件包名 `dsh-workspace-tags` 已可用、发布准备就绪；发布到 npm 后，社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
+DSH 的插件市场是**索引源**模式，没有内置的中央商店。插件已发布到 npm（0.3.2）；社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在约 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
 
 发布步骤、社区索引、推广清单详见 [docs/MARKETPLACE.md](docs/MARKETPLACE.md)。
 

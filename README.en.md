@@ -5,6 +5,7 @@ English | [中文](README.md)
 > Colored tags for DeepSeek Harness workspace projects: chips beside project names, tag filtering in the sidebar, grouping workspaces by tag, and one page to manage every tag.
 
 [![CI](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml/badge.svg)](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/dsh-workspace-tags)](https://www.npmjs.com/package/dsh-workspace-tags)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
 
@@ -93,6 +94,24 @@ A **Tags** row is added above **More** in the sidebar panel list. It opens the t
 
 ## Install
 
+### From npm (recommended)
+
+```sh
+# Web / CLI profile
+dsh plugin --profile web add dsh-workspace-tags
+```
+
+For the desktop app, fully quit the app first and use the CLI that ships with it:
+
+```sh
+"/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
+  plugin --profile desktop add dsh-workspace-tags
+```
+
+Then reopen the app.
+
+### From the release tarball (offline / pinned)
+
 The source is TypeScript. The release tarball is built by CI and includes `lib/` and `client/`, so installing it needs no local build.
 
 ```sh
@@ -107,11 +126,9 @@ For the desktop app, fully quit the app first and use the CLI that ships with it
   plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
-Then reopen the app.
-
 ### Plugin marketplace
 
-DSH’s plugin market is **index-based**: there is no built-in central store. The **Discover** tab reads index sources that each profile adds. The npm package name `dsh-workspace-tags` is available and the package is publish-ready; after it is published to npm, community indexes that auto-discover npm packages with the `dsh-plugin` keyword and a `dsh.bundle` declaration (for example [REALOIYO’s DSH plugin index](https://realoiyo.github.io/dsh-plugin-market/index.json)) will list it, typically within six hours.
+DSH’s plugin market is **index-based**: there is no built-in central store. The **Discover** tab reads index sources that each profile adds. The plugin is published to npm at **0.3.2**; community indexes that auto-discover npm packages with the `dsh-plugin` keyword and a `dsh.bundle` declaration (for example [REALOIYO’s DSH plugin index](https://realoiyo.github.io/dsh-plugin-market/index.json)) list it, typically within six hours.
 
 To browse it in DSH: **Plugins → Discover → Add index source**, paste the index URL, then install from the card. See [docs/MARKETPLACE.md](docs/MARKETPLACE.md) (Chinese) for the publication steps, index sources, and the promotion checklist.
 

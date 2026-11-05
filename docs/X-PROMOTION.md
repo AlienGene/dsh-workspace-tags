@@ -14,6 +14,8 @@
   - 筛选：<https://x.com/liuhuigene/status/2118168779754700988>
   - 分组/取消：<https://x.com/liuhuigene/status/2118168877746340231>
   - 安装命令回复：<https://x.com/liuhuigene/status/2118172662581387655>（无图）
+  - npm 发布回复：<https://x.com/liuhuigene/status/2118231522692288607>（主帖下，无图）
+    - 文案：`Now on npm: dsh-workspace-tags@0.3.2` + `dsh plugin --profile web add dsh-workspace-tags`
 
 ## 图片
 

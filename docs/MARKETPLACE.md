@@ -9,7 +9,7 @@
 | npm 包名 `dsh-workspace-tags` | **可用**（registry 返回 404，未被人占用） |
 | 包是否可直接发布 | 是：`prepack` 会构建，`files` 包含 `lib/`、`client/`，已声明 `dsh.bundle` 和 `dsh-plugin` 关键词 |
 | 当前安装方式 | GitHub Release 附件（`dsh-workspace-tags.tgz`），无需本地构建 |
-| 是否已进入 npm / 社区索引 | npm 包名已占用；当前公开的是 **0.0.0-stage** 占位符，0.3.2 已 staged，等待 maintainer 2FA 批准（见下） |
+| npm / 社区索引 | **npm 0.3.2 已发布**（latest=0.3.2）；社区索引尚未收录（见下方索引状态） |
 | GitHub Release | v0.3.2 已发布，附件由 CI 构建 |
 
 ## 一、DSH 插件市场是怎么工作的
@@ -50,9 +50,11 @@ npm publish --access public --cache /tmp/dsh-npm-cache
 
 > `--cache /tmp/dsh-npm-cache` 是为了绕开本机 `~/.npm` 的权限问题；首次可能需要 `npm login`。
 
-### Staged publishing：0.0.0-stage 是占位符，不是插件版本
+### Staged publishing：0.0.0-stage 是占位符，不是插件版本（已完成）
 
-2026-11-05 的 `npm publish` 进入了 npm 的 **staged publishing** 流程：新包先公开一个占位版本 `0.0.0-stage`，真正的 0.3.2 在 staged 区等待 maintainer 用 2FA 批准。批准后 0.3.2 才会替换占位符并公开。
+2026-11-05 的 `npm publish` 进入了 npm 的 **staged publishing** 流程：新包先公开一个占位版本 `0.0.0-stage`，真正的 0.3.2 在 staged 区等待 maintainer 用 2FA 批准。**2026-11-05 02:53 UTC 已批准并发布 0.3.2**；`0.0.0-stage` 作为历史占位版本仍留在 registry，但 `latest` 是 0.3.2，正常安装不会拿到占位符。
+
+> 已发布：<https://www.npmjs.com/package/dsh-workspace-tags>（0.3.2）。
 
 - 占位符只有 2 个文件（stub），没有插件代码；**不要**把 npm 链接或市场索引指向它。
 - 批准前在 staged 区核对版本应为 **0.3.2**，并检查文件里包含 `lib/`、`client/`、`cordis.patch.yml`。
@@ -211,12 +213,12 @@ npm view dsh-workspace-tags version
 - DSH 升级后优先验证侧栏 DOM 选择器（见 `docs/COMPATIBILITY.md`）
 - 保持 `engines.dsh` 与当前 DSH 版本一致；索引里的 `engines.dsh` 必须与包内一致，否则市场判为不兼容
 
-## 五、下一步
+## 五、npm 发布与社区索引状态（2026-11-05）
 
-发布已经进入 staged 审批阶段，不再需要 token/OTP 给助手：
+- npm：**0.3.2 已发布**，`latest=0.3.2`；`npm view dsh-workspace-tags version` 返回 0.3.2。
+- 安装：`dsh plugin --profile web add dsh-workspace-tags`（桌面版把 profile 换成 desktop）。
+- REALOIYO 索引：已检查完整索引（9,885 个插件），**暂未收录**；最近重建为 2026-11-05 04:52 UTC（npm 发布后约 2 小时，可能是 npm 搜索索引尚未跟上），下一次约 10:52 UTC（18:52 CST）。
+- dshmarket 目录：`dsh-plugin-catalog` 2026.1105.15517（04:41 UTC）暂未收录；该目录每天重建。
+- X：npm 回复已发，见 `docs/X-PROMOTION.md`。
 
-1. 在 npmjs.com 的 **Staged Packages** 里核对并 **Approve** `dsh-workspace-tags@0.3.2`（2FA）。
-2. 批准后执行 `npm view dsh-workspace-tags version` 确认是 0.3.2；把输出发我。
-3. 我确认 REALOIYO 索引收录，并在 X 的安装回复下补一条 npm 链接。
-
-GitHub Release 附件安装方式已经可用，功能不受影响。
+索引是第三方自动发现，不需要逐个提交；等下一次重建后再检查。如果长时间未收录，可改用自建索引（npm source）作为兜底。
