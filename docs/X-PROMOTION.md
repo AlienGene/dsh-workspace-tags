@@ -4,6 +4,12 @@
 
 > 本环境没有 X 账号或 X API 凭证，无法代替你点击发布。下面的「一键打开 X 发帖窗口」链接需要你登录 X 后，**手动附上图片**再发布。若你希望我尝试 API 自动发帖，需要提供 X 开发者 App 的 user-context token（不推荐；OAuth 和 2FA 都更麻烦）。
 
+## 发布记录
+
+- **2026-11-05**：英文主帖 + `assets/x-launch.png` 已发布：<https://x.com/liuhuigene/status/2118164001242906841>
+  - 文案为下方 English 主帖；图片为英文界面（1200×675）；fxtwitter 已验证公开可见。
+  - 主帖尚未 Pin；建议在 X 里 Pin，并按需补发 4 条英文线程回复。
+
 ## 图片
 
 | 用途 | 文件 | 尺寸 | Alt text |
