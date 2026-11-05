@@ -8,7 +8,12 @@
 
 - **2026-11-05**：英文主帖 + `assets/x-launch.png` 已发布：<https://x.com/liuhuigene/status/2118164001242906841>
   - 文案为下方 English 主帖；图片为英文界面（1200×675）；fxtwitter 已验证公开可见。
-  - 主帖尚未 Pin；建议在 X 里 Pin，并按需补发 4 条英文线程回复。
+  - 主帖尚未 Pin；建议在 X 里 Pin。
+- **2026-11-05 线程回复**（英文，均附英文截图，均为主帖的回复）：
+  - 标注浮层：<https://x.com/liuhuigene/status/2118168679863250975>
+  - 筛选：<https://x.com/liuhuigene/status/2118168779754700988>
+  - 分组/取消：<https://x.com/liuhuigene/status/2118168877746340231>
+  - 安装命令回复未发（主帖已带 GitHub 链接）；需要时可补第 4 条。
 
 ## 图片
 
