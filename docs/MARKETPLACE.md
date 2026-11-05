@@ -9,7 +9,7 @@
 | npm 包名 `dsh-workspace-tags` | **可用**（registry 返回 404，未被人占用） |
 | 包是否可直接发布 | 是：`prepack` 会构建，`files` 包含 `lib/`、`client/`，已声明 `dsh.bundle` 和 `dsh-plugin` 关键词 |
 | 当前安装方式 | GitHub Release 附件（`dsh-workspace-tags.tgz`），无需本地构建 |
-| 是否已进入 npm / 社区索引 | **尚未发布**；发布需要 npm token |
+| 是否已进入 npm / 社区索引 | **尚未发布**；npm 账号对写操作要求 2FA OTP，推荐本机发布（见下） |
 | GitHub Release | v0.3.2 已发布，附件由 CI 构建 |
 
 ## 一、DSH 插件市场是怎么工作的
@@ -33,14 +33,30 @@ DSH 没有内置的中央插件商店。「插件 → 发现」读取的是**用
 
 ### 1. 发布到 npm
 
-包名和内容都已经准备好。需要你提供一个 npm token（一次性发布用）：
+包名和内容都已经准备好。**推荐直接在本机发布**：npm 账号开启了「Authorization and writes」后，普通 Publish token 每次发布都要 6 位 OTP，而 OTP 约 30 秒失效，聊天往返不可靠。本机发布由你在终端输入 OTP，最稳。
 
-1. 如果没有 npm 账号：<https://www.npmjs.com/signup>，完成邮箱验证。
-2. 登录后打开 <https://www.npmjs.com/settings/> → 头像菜单 → **Access Tokens**（或直接访问 `https://www.npmjs.com/settings/<你的用户名>/tokens`）。
-3. **Generate New Token**：
-   - 选 **Classic Token → Automation**（适合命令行/CI 发布，绕过 2FA 交互）；或
-   - 选 **Granular Token**：Permissions → Packages and scopes 选 **Read and write**，勾选该包或所有包；如果账号开了 2FA，勾选 bypass 2FA（仅自动化发布用）。
-4. 复制生成的 `npm_...` token，发到这里。**不要**把它写进仓库或 README。
+```sh
+cd "/Users/liuhui/Desktop/我的项目/NewPlugin"
+
+# 如未登录
+npm login --cache /tmp/dsh-npm-cache
+# 用户名 liuhuigene；按提示输入密码和当前 6 位 OTP
+
+npm publish --access public --cache /tmp/dsh-npm-cache
+# 出现 OTP 提示时输入当前 6 位码
+# 若命令直接报 EOTP 而没有提示，立刻重试：
+# npm publish --access public --cache /tmp/dsh-npm-cache --otp=<刚生成的6位码>
+```
+
+> `--cache /tmp/dsh-npm-cache` 是为了绕开本机 `~/.npm` 的权限问题；首次可能需要 `npm login`。
+
+### 2FA 阻塞排查（已确认）
+
+- 现象：`npm publish` 返回 **EOTP**；`npm whoami` 正常，说明 token 有效且有发布权限，但**不是 2FA-bypass 类型**。
+- 原因：npm 账号的 2FA 模式是「Authorization and writes」；**Publish** token 或未勾选 **Bypass 2FA** 的 Granular token 发布时仍需 OTP。
+- 已尝试的 3 个 token 都属于这种情况；OTP `880211` 在输入时已过期（聊天往返约 40 分钟）。
+- 如果仍想让助手发布，需要**真正的 Classic Automation token**（不是 Publish）或 **Granular token + Bypass 2FA**；否则请在本机终端发布。
+- 不建议为了绕过 OTP 把账号 2FA 改成「Authorization only」；这会降低账号安全性。
 
 拿到 token 后我会执行（token 只放在临时 npmrc 里，发布后删除）：
 
@@ -157,9 +173,10 @@ npm view dsh-workspace-tags version
 
 ## 五、下一步
 
-当前只差 npm token。你可以：
+当前只差 npm 发布（版本 0.3.2 已构建好）：
 
-1. 按上面的步骤生成 token 并发来，我完成 0.3.1 发布，随后确认 REALOIYO 索引收录；或
-2. 暂不发布 npm，我改用自建索引 + 构建提交的方式，给你一个可直接添加的索引 URL（覆盖面会小很多）。
+1. **推荐**：在本机终端执行上面的 `npm publish`，输入当前 OTP；发布后把输出发我，我确认 REALOIYO 索引收录。
+2. 如果想让助手发布：创建一个 **Classic Automation token**（不是 Publish）或 **Granular token + Bypass 2FA** 发来；否则不要发普通 token，仍会被 EOTP 拦截。
+3. 暂不发布 npm：可改用自建索引 + 构建提交的方式，给你一个可直接添加的索引 URL（覆盖面会小很多）。
 
-在你确认之前，GitHub Release 附件安装方式已经可用，功能不受影响。
+GitHub Release 附件安装方式已经可用，功能不受影响。

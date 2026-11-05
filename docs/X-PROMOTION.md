@@ -13,7 +13,7 @@
   - 标注浮层：<https://x.com/liuhuigene/status/2118168679863250975>
   - 筛选：<https://x.com/liuhuigene/status/2118168779754700988>
   - 分组/取消：<https://x.com/liuhuigene/status/2118168877746340231>
-  - 安装命令回复未发（主帖已带 GitHub 链接）；需要时可补第 4 条。
+  - 安装命令回复：<https://x.com/liuhuigene/status/2118172662581387655>（无图）
 
 ## 图片
 
