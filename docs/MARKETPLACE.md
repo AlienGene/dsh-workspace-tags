@@ -9,7 +9,7 @@
 | npm 包名 `dsh-workspace-tags` | **可用**（registry 返回 404，未被人占用） |
 | 包是否可直接发布 | 是：`prepack` 会构建，`files` 包含 `lib/`、`client/`，已声明 `dsh.bundle` 和 `dsh-plugin` 关键词 |
 | 当前安装方式 | GitHub Release 附件（`dsh-workspace-tags.tgz`），无需本地构建 |
-| 是否已进入 npm / 社区索引 | **尚未发布**；npm 账号对写操作要求 2FA OTP，推荐本机发布（见下） |
+| 是否已进入 npm / 社区索引 | npm 包名已占用；当前公开的是 **0.0.0-stage** 占位符，0.3.2 已 staged，等待 maintainer 2FA 批准（见下） |
 | GitHub Release | v0.3.2 已发布，附件由 CI 构建 |
 
 ## 一、DSH 插件市场是怎么工作的
@@ -50,7 +50,47 @@ npm publish --access public --cache /tmp/dsh-npm-cache
 
 > `--cache /tmp/dsh-npm-cache` 是为了绕开本机 `~/.npm` 的权限问题；首次可能需要 `npm login`。
 
-### 2FA 阻塞排查（已确认）
+### Staged publishing：0.0.0-stage 是占位符，不是插件版本
+
+2026-11-05 的 `npm publish` 进入了 npm 的 **staged publishing** 流程：新包先公开一个占位版本 `0.0.0-stage`，真正的 0.3.2 在 staged 区等待 maintainer 用 2FA 批准。批准后 0.3.2 才会替换占位符并公开。
+
+- 占位符只有 2 个文件（stub），没有插件代码；**不要**把 npm 链接或市场索引指向它。
+- 批准前在 staged 区核对版本应为 **0.3.2**，并检查文件里包含 `lib/`、`client/`、`cordis.patch.yml`。
+
+**用 npmjs.com 批准（推荐，不需要升级 CLI）**
+
+1. 登录 <https://www.npmjs.com>，打开 **Staged Packages** 标签（个人菜单或包页面里的 Staged 标签）。
+2. 找到 `dsh-workspace-tags`，核对 staged 版本为 `0.3.2`、文件为 0.3.2 的构建产物。
+3. 点 **Approve**，输入当前 6 位 2FA 码。
+
+**用 CLI 批准**
+
+staged 命令需要 **npm CLI >= 11.15.0**（当前是 11.6.2，所以 `npm stage` 不存在）：
+
+```sh
+npm install -g npm@latest
+npm stage list
+npm stage approve <stage-id>
+# 按要求输入当前 6 位 OTP
+```
+
+或免全局安装：
+
+```sh
+npx npm@latest stage list
+npx npm@latest stage approve <stage-id>
+```
+
+批准后验证：
+
+```sh
+npm view dsh-workspace-tags version --cache /tmp/dsh-npm-cache
+# 应为 0.3.2
+```
+
+REALOIYO 等社区索引通常会在下一次重建（约 6 小时）后收录 0.3.2。
+
+### 2FA 阻塞排查（历史）
 
 - 现象：`npm publish` 返回 **EOTP**；`npm whoami` 正常，说明 token 有效且有发布权限，但**不是 2FA-bypass 类型**。
 - 原因：npm 账号的 2FA 模式是「Authorization and writes」；**Publish** token 或未勾选 **Bypass 2FA** 的 Granular token 发布时仍需 OTP。
@@ -173,10 +213,10 @@ npm view dsh-workspace-tags version
 
 ## 五、下一步
 
-当前只差 npm 发布（版本 0.3.2 已构建好）：
+发布已经进入 staged 审批阶段，不再需要 token/OTP 给助手：
 
-1. **推荐**：在本机终端执行上面的 `npm publish`，输入当前 OTP；发布后把输出发我，我确认 REALOIYO 索引收录。
-2. 如果想让助手发布：创建一个 **Classic Automation token**（不是 Publish）或 **Granular token + Bypass 2FA** 发来；否则不要发普通 token，仍会被 EOTP 拦截。
-3. 暂不发布 npm：可改用自建索引 + 构建提交的方式，给你一个可直接添加的索引 URL（覆盖面会小很多）。
+1. 在 npmjs.com 的 **Staged Packages** 里核对并 **Approve** `dsh-workspace-tags@0.3.2`（2FA）。
+2. 批准后执行 `npm view dsh-workspace-tags version` 确认是 0.3.2；把输出发我。
+3. 我确认 REALOIYO 索引收录，并在 X 的安装回复下补一条 npm 链接。
 
 GitHub Release 附件安装方式已经可用，功能不受影响。
