@@ -9,8 +9,8 @@
 | npm 包名 `dsh-workspace-tags` | **可用**（registry 返回 404，未被人占用） |
 | 包是否可直接发布 | 是：`prepack` 会构建，`files` 包含 `lib/`、`client/`，已声明 `dsh.bundle` 和 `dsh-plugin` 关键词 |
 | 当前安装方式 | GitHub Release 附件（`dsh-workspace-tags.tgz`），无需本地构建 |
-| npm / 社区索引 | **npm 0.3.2 已发布**（latest=0.3.2）；社区索引尚未收录（见下方索引状态） |
-| GitHub Release | v0.3.2 已发布，附件由 CI 构建 |
+| npm / 社区索引 | npm 0.3.2（仅适用于 DSH 0.2.1）；**0.4.0 已发布 GitHub Release，npm 0.4.0 待登录发布**；社区索引尚未收录 0.4.0 |
+| GitHub Release | **v0.4.0 已发布**（修复 DSH 0.2.2 浮层），附件由 CI 构建 |
 
 ## 一、DSH 插件市场是怎么工作的
 
@@ -213,10 +213,11 @@ npm view dsh-workspace-tags version
 - DSH 升级后优先验证侧栏 DOM 选择器（见 `docs/COMPATIBILITY.md`）
 - 保持 `engines.dsh` 与当前 DSH 版本一致；索引里的 `engines.dsh` 必须与包内一致，否则市场判为不兼容
 
-## 五、npm 发布与社区索引状态（2026-11-05）
+## 五、npm 发布与社区索引状态（2026-11-27）
 
-- npm：**0.3.2 已发布**，`latest=0.3.2`；`npm view dsh-workspace-tags version` 返回 0.3.2。
-- 安装：`dsh plugin --profile web add dsh-workspace-tags`（桌面版把 profile 换成 desktop）。
+- **0.4.0**：已发布 GitHub Release，修复 DSH 0.2.2-rc.5 下筛选/标注浮层不可用；npm 0.4.0 **尚未发布**，发布需要先 `npm login`（当前 shell 的 npm 认证为 401）。
+- npm：latest 仍是 0.3.2（仅适用于 DSH 0.2.1）。0.4.0 发布后，0.2.2 用户可 `dsh plugin --profile web add dsh-workspace-tags@0.4.0`。
+- 当前 0.2.2 安装方式：使用 v0.4.0 的 GitHub Release 附件，或本地 `dsh-workspace-tags-0.4.0.tgz`。
 - REALOIYO 索引：已检查完整索引（9,885 个插件），**暂未收录**；最近重建为 2026-11-05 04:52 UTC（npm 发布后约 2 小时，可能是 npm 搜索索引尚未跟上），下一次约 10:52 UTC（18:52 CST）。
 - dshmarket 目录：`dsh-plugin-catalog` 2026.1105.15517（04:41 UTC）暂未收录；该目录每天重建。
 - X：npm 回复已发，见 `docs/X-PROMOTION.md`。

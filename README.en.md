@@ -94,25 +94,9 @@ A **Tags** row is added above **More** in the sidebar panel list. It opens the t
 
 ## Install
 
-### From npm (recommended)
+### From the GitHub release (recommended for 0.2.2)
 
-```sh
-# Web / CLI profile
-dsh plugin --profile web add dsh-workspace-tags
-```
-
-For the desktop app, fully quit the app first and use the CLI that ships with it:
-
-```sh
-"/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
-  plugin --profile desktop add dsh-workspace-tags
-```
-
-Then reopen the app.
-
-### From the release tarball (offline / pinned)
-
-The source is TypeScript. The release tarball is built by CI and includes `lib/` and `client/`, so installing it needs no local build.
+The source is TypeScript. The v0.4.0 release tarball is built by CI and includes `lib/` and `client/`, so installing it needs no local build.
 
 ```sh
 # Web / CLI profile
@@ -126,9 +110,21 @@ For the desktop app, fully quit the app first and use the CLI that ships with it
   plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
+Then reopen the app.
+
+### From npm
+
+**0.4.0 is not on npm yet** (publishing needs an npm login); DSH 0.2.2 users should use the release tarball above. Users still on 0.2.1 can explicitly install 0.3.2:
+
+```sh
+dsh plugin --profile web add dsh-workspace-tags@0.3.2
+```
+
+Once 0.4.0 is published, replace the version with `dsh-workspace-tags@0.4.0`.
+
 ### Plugin marketplace
 
-DSH’s plugin market is **index-based**: there is no built-in central store. The **Discover** tab reads index sources that each profile adds. The plugin is published to npm at **0.4.0**; community indexes that auto-discover npm packages with the `dsh-plugin` keyword and a `dsh.bundle` declaration (for example [REALOIYO’s DSH plugin index](https://realoiyo.github.io/dsh-plugin-market/index.json)) list it, typically within six hours.
+DSH’s plugin market is **index-based**: there is no built-in central store. The **Discover** tab reads index sources that each profile adds. The v0.4.0 release is on GitHub; npm 0.4.0 is not published yet. Community indexes that auto-discover npm packages with the `dsh-plugin` keyword and a `dsh.bundle` declaration (for example [REALOIYO’s DSH plugin index](https://realoiyo.github.io/dsh-plugin-market/index.json)) list it, typically within six hours.
 
 To browse it in DSH: **Plugins → Discover → Add index source**, paste the index URL, then install from the card. See [docs/MARKETPLACE.md](docs/MARKETPLACE.md) (Chinese) for the publication steps, index sources, and the promotion checklist.
 

@@ -92,41 +92,37 @@ DeepSeek Harness 的工作区列表按项目名排列。项目一多，就很难
 
 ## 安装
 
-### 从 npm 安装（推荐）
+### 从 GitHub Release 安装（0.2.2 当前推荐）
 
-```sh
-# Web / CLI profile
-dsh plugin --profile web add dsh-workspace-tags
-```
-
-桌面版使用 App 自带的 CLI，并先完全退出 App：
-
-```sh
-"/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
-  plugin --profile desktop add dsh-workspace-tags
-```
-
-安装后重新打开 App。
-
-### 从 Release 附件安装（离线 / 固定版本）
-
-源码全部为 TypeScript；Release 附件 `dsh-workspace-tags.tgz` 由 CI 构建（内含 `lib/`、`client/`），安装不需要本地构建。
+源码全部为 TypeScript；v0.4.0 Release 附件由 CI 构建（内含 `lib/`、`client/`），安装不需要本地构建。
 
 ```sh
 # Web / CLI profile
 dsh plugin --profile web add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
-桌面版：
+桌面版使用 App 自带的 CLI，并先完全退出 App：
 
 ```sh
 "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/cli/bin/dsh" \
   plugin --profile desktop add https://github.com/AlienGene/dsh-workspace-tags/releases/latest/download/dsh-workspace-tags.tgz
 ```
 
+安装后重新打开 App。
+
+### 从 npm 安装
+
+npm 上的 **0.4.0 尚未发布**（发布需要 npm 登录）；0.2.2 用户请先用上面的 Release 附件。仍停留在 0.2.1 的用户可显式安装 0.3.2：
+
+```sh
+dsh plugin --profile web add dsh-workspace-tags@0.3.2
+```
+
+0.4.0 发布后把版本换成 `dsh-workspace-tags@0.4.0` 即可。
+
 ### 插件市场
 
-DSH 的插件市场是**索引源**模式，没有内置的中央商店。插件已发布到 npm（0.4.0）；社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在约 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
+DSH 的插件市场是**索引源**模式，没有内置的中央商店。v0.4.0 已发布到 GitHub Release；npm 0.4.0 尚未发布，社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在 npm 0.4.0 发布后约 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
 
 发布步骤、社区索引、推广清单详见 [docs/MARKETPLACE.md](docs/MARKETPLACE.md)。
 
