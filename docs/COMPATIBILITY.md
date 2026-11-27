@@ -2,11 +2,12 @@
 
 ## 已验证版本
 
-| DSH | 桌面 App | 结果 |
+| DSH | 插件版本 | 结果 |
 |---|---|---|
-| `0.2.1-rc.5` | `0.2.1-rc.5`（macOS arm64） | 端到端通过：标签页增改删、行内标注、芯片、筛选/重置、按标签分组、持久化 |
+| `0.2.2-rc.5` | `0.4.0`（macOS arm64） | 端到端通过：标签页增改删、行内标注、芯片、筛选/重置、按标签分组、持久化；修复 0.2.2 移除 `useAnchoredPosition` 导致的 overlay 崩溃 |
+| `0.2.1-rc.5` | `0.3.2`（macOS arm64） | 历史版本端到端通过；用于仍停留在 0.2.1 的用户 |
 
-`package.json` 的 `engines.dsh` 为 `>=0.2.1-rc.5 <0.3.0`。超出该范围时安装器会要求显式版本豁免；本插件尚未在其它版本验证。
+当前 `package.json` 的 `engines.dsh` 为 `>=0.2.2-rc.5 <0.3.0`。超出该范围时安装器会要求显式版本豁免；0.2.1 请显式安装 `dsh-workspace-tags@0.3.2`。
 
 ## 依赖的 DSH 结构
 
@@ -24,7 +25,9 @@
 | 单列表视图 | `[role="tree"][class*="_flatList"]` | 没有项目行，隐藏筛选入口 |
 | 折叠 rail | 根元素 class 以 `_rail` 结尾 | 列表不挂载，不做注入 |
 
-CSS Module 的哈希前缀（如 `JoiKIa_`、`Kjh-qa_`）是构建产物，**不要**匹配完整类名；只匹配作者写的后缀。
+CSS Module 的哈希前缀（如 `JoiKIa_`、`Kjh-qa_`）是构建产物，**不要**匹配完整类名；只匹配作者写的后缀。0.2.2-rc.5 下这些后缀与 0.2.1 一致，因此 0.4.0 不需要修改选择器。
+
+0.2.2 的 `@deepseek-ai/dsh-client-ui-primitives` 移除了 `useAnchoredPosition` / `AnchoredPositionOptions`；筛选与标注浮层改用 CSS Anchor Positioning（`anchor-name` / `position-anchor` / `position-try-fallbacks`），不再依赖该 hook。这是浮层失效的直接原因。
 
 ## 数据兼容
 
@@ -36,7 +39,7 @@ CSS Module 的哈希前缀（如 `JoiKIa_`、`Kjh-qa_`）是构建产物，**不
 
 ## 升级 DSH 后怎么检查
 
-1. 启动后看侧栏：项目名右侧是否出现芯片、区头是否有筛选图标、面板列表是否有「标签」。
+1. 启动后看侧栏：项目名右侧是否出现芯片、区头是否有筛选图标、面板列表是否有「标签」；控制台不应出现 `useAnchoredPosition` 或 `shell.overlay` 错误。
 2. 打开视图选项：是否有「按标签」；选中后列表是否出现组头。
 3. 若某一项缺失或位置错乱：
    - 在 `client/client.js`（或 DSH 自带包）里搜索对应的后缀（`_projectRow`、`_projectText`、`_rowActions`、`_groupSection`、`_headerActions`、`_viewOptionsMenu`），确认结构是否改名/换层级。

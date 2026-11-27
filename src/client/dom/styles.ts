@@ -69,6 +69,10 @@ const CSS = `
 
 /* ---------- anchored popovers ---------- */
 .dshwt-panel{box-sizing:border-box;display:flex;flex-direction:column;gap:2px;min-width:248px;max-width:330px;max-height:min(430px,70vh);padding:6px;color:var(--dsw-alias-label-primary,#1f2328)}
+/* DSH 0.2.2 removed useAnchoredPosition; place custom panels with CSS anchors. */
+.dshwt-panel[data-dshwt-anchored]{position:fixed;position-anchor:--dshwt-panel-anchor;left:max(12px,anchor(left));top:max(12px,calc(anchor(bottom) + 6px));right:auto;bottom:auto;z-index:40;max-height:min(430px,calc(100vh - 24px));position-try-fallbacks:--dshwt-panel-above,--dshwt-panel-window}
+@position-try --dshwt-panel-above{top:auto;bottom:calc(anchor(top) + 6px)}
+@position-try --dshwt-panel-window{top:12px;bottom:12px;max-height:calc(100vh - 24px)}
 .dshwt-panel-title{padding:6px 8px 4px;font-size:12px;font-weight:600;color:var(--dsw-alias-label-secondary,#5b6470);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dshwt-panel-list{display:flex;flex-direction:column;gap:1px;min-height:0;overflow-y:auto}
 .dshwt-panel-row{display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:none;border-radius:6px;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}

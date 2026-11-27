@@ -173,7 +173,7 @@ npm view dsh-workspace-tags version
           "version": "0.3.1",
           "publishTimestamp": 1793750400,
           "source": { "type": "npm" },
-          "engines": { "dsh": ">=0.2.1-rc.5 <0.3.0" }
+          "engines": { "dsh": ">=0.2.2-rc.5 <0.3.0" }
         }
       ]
     }

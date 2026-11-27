@@ -3,15 +3,20 @@
  * picker.
  *
  * It is not the `Menu` primitive because the annotation panel hosts a text
- * input and keeps its list open while rows toggle. Placement and material come
- * from the shipped primitives (`useAnchoredPosition`, `MenuSurface`), and the
- * panel dismisses on outside pointer-down or Escape without closing a parent
- * dialog.
+ * input and keeps its list open while rows toggle. Placement uses CSS Anchor
+ * Positioning (DSH 0.2.2 removed `useAnchoredPosition`): the trigger gets an
+ * `anchor-name`, the panel sets `position-anchor` and the shared stylesheet
+ * supplies placement, fallbacks and size limits. Material comes from
+ * `MenuSurface`; the panel dismisses on outside pointer-down or Escape without
+ * closing a parent dialog.
  *
  * @module dsh-workspace-tags/client/components/AnchorPanel
  */
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
-import { MenuSurface, useAnchoredPosition } from '@deepseek-ai/dsh-client-ui-primitives'
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { MenuSurface } from '@deepseek-ai/dsh-client-ui-primitives'
+
+/** CSS anchor name shared by the one open filter/picker panel. */
+const ANCHOR_NAME = '--dshwt-panel-anchor'
 
 /** Props of {@link AnchorPanel}. */
 export interface AnchorPanelProps {
@@ -28,18 +33,17 @@ export interface AnchorPanelProps {
  */
 export function AnchorPanel({ open, anchor, label, onClose, children }: AnchorPanelProps): ReactNode {
   const panelRef = useRef<HTMLDivElement | null>(null)
-  const anchorRef = useRef<HTMLElement | null>(null)
-  anchorRef.current = anchor
 
-  const position = useAnchoredPosition({
-    open: open && anchor !== null,
-    anchorRef,
-    panelRef,
-    side: 'bottom',
-    align: 'start',
-    gap: 6,
-    margin: 8,
-  })
+  useLayoutEffect(() => {
+    if (!open || anchor === null) return
+    const previous = anchor.style.getPropertyValue('anchor-name')
+    const priority = anchor.style.getPropertyPriority('anchor-name')
+    anchor.style.setProperty('anchor-name', ANCHOR_NAME)
+    return () => {
+      if (previous === '') anchor.style.removeProperty('anchor-name')
+      else anchor.style.setProperty('anchor-name', previous, priority)
+    }
+  }, [open, anchor])
 
   useEffect(() => {
     if (!open || anchor === null) return
@@ -66,16 +70,8 @@ export function AnchorPanel({ open, anchor, label, onClose, children }: AnchorPa
 
   if (!open || anchor === null) return null
 
-  const style: CSSProperties = {
-    position: 'fixed',
-    left: position?.left,
-    top: position?.top,
-    zIndex: 40,
-    visibility: position === null ? 'hidden' : 'visible',
-  }
-
   return (
-    <MenuSurface ref={panelRef} role="dialog" aria-label={label} className="dshwt-panel" style={style}>
+    <MenuSurface ref={panelRef} role="dialog" aria-label={label} className="dshwt-panel" data-dshwt-anchored="">
       {children}
     </MenuSurface>
   )

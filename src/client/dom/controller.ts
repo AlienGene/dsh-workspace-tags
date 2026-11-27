@@ -76,11 +76,10 @@ export function createDomController(options: DomControllerOptions): DomControlle
     const workspaceId = workspaceIdOf(row)
     if (workspaceId === null || workspaceId === '') return
     const title = row.querySelector<HTMLElement>(`:scope > span${SELECTORS.projectText}`)?.textContent?.trim()
-    // The add button lives in the hover-only action strip, which collapses as
-    // soon as the pointer enters the panel. Anchor to the always-visible row
-    // instead; chips are stable and anchor themselves.
-    const anchorElement = anchor.hasAttribute(ADD_ATTRIBUTE) ? row : anchor
-    store.openPicker(workspaceId, title !== undefined && title.length > 0 ? title : workspaceId, anchorElement)
+    // The add button lives in the hover-only action strip and the chip host
+    // re-renders when a tag is assigned. Both are poor CSS anchors: anchor the
+    // floating panel to the workspace row, which survives those updates.
+    store.openPicker(workspaceId, title !== undefined && title.length > 0 ? title : workspaceId, row)
     schedule()
   }
 

@@ -2,7 +2,7 @@
 
 ## 为什么需要 DOM 增强
 
-DeepSeek Harness 0.2.1-rc.5 的左侧栏工作区浏览区（`sidebar.workspaces`）由 `ui-workspace` **独占**渲染，并且只声明了五个子 slot：
+DeepSeek Harness 0.2.2-rc.5 的左侧栏工作区浏览区（`sidebar.workspaces`）由 `ui-workspace` **独占**渲染，并且只声明了五个子 slot：
 
 - `sidebar.workspaces.directoryFlow`
 - `sidebar.workspaces.session.menu.item`
@@ -91,6 +91,7 @@ interface TagState {
 - 组头与原生工作区行同格式：34px 行高、8px 内边距、16px glyph 槽（色点；悬停/聚焦或收起时换成 chevron）、14px/700 标签名、行尾数量与 hover 操作区。成员 section 通过 `--dsh-workspace-indent: 12px` 缩进一级，视觉上等同原生「按工作区树」的子项。
 - 选中「按标签」时，程序化点击原生的「按工作区」项，把列表切到可重排的分组视图；然后插入组头节点并写 `order`。
 - 组顺序等于标签创建顺序；一个项目归入其**最早创建**的标签；没有标签的项目归入「未标注」；空组不显示。
+- 筛选/标注浮层使用 CSS Anchor Positioning：打开的触发元素设置 `anchor-name`，面板用 `position-anchor` 和 `anchor()` 定位，并通过 `position-try-fallbacks` 在视口底部上翻；DSH 0.2.2 的 primitives 已移除 `useAnchoredPosition`，不再使用 JS 坐标 hook。
 - 标注浮层的输入框右侧有「创建」按钮，与回车共用同一个 `submit()`；底部「返回」只关闭浮层。
 - 标注浮层的颜色行提供 6 个预设色；「自定义」展开原生取色器，只有展开后才可设定任意颜色。
 - 折叠：点击组头或按 Enter/Space 切换 `collapsedGroups`；成员的 `data-dshwt-group-collapsed` 控制显示，布局签名包含折叠集合，重绘后焦点回到同一组头。

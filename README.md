@@ -7,7 +7,7 @@
 [![CI](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml/badge.svg)](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/dsh-workspace-tags)](https://www.npmjs.com/package/dsh-workspace-tags)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
+[![DSH](https://img.shields.io/badge/DSH-0.2.2--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
 
 ![工作区标签预览](assets/preview.png)
 
@@ -126,7 +126,7 @@ dsh plugin --profile web add https://github.com/AlienGene/dsh-workspace-tags/rel
 
 ### 插件市场
 
-DSH 的插件市场是**索引源**模式，没有内置的中央商店。插件已发布到 npm（0.3.2）；社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在约 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
+DSH 的插件市场是**索引源**模式，没有内置的中央商店。插件已发布到 npm（0.4.0）；社区自动索引（关键词 `dsh-plugin` + `dsh.bundle`）会在约 6 小时内收录，例如 [REALOIYO 的 DSH 插件索引](https://realoiyo.github.io/dsh-plugin-market/index.json)。在 DSH 的 **插件 → 发现 → 添加索引源** 粘贴对应 URL 即可浏览和安装。
 
 发布步骤、社区索引、推广清单详见 [docs/MARKETPLACE.md](docs/MARKETPLACE.md)。
 
@@ -155,7 +155,7 @@ dsh plugin --profile web add ./dsh-workspace-tags-<version>.tgz
 
 ## 兼容性
 
-- 面向 **DeepSeek Harness 0.2.1-rc.5** 开发并验证，`engines.dsh` 限定 `>=0.2.1-rc.5 <0.3.0`
+- 面向 **DeepSeek Harness 0.2.2-rc.5** 开发并验证，`engines.dsh` 限定 `>=0.2.2-rc.5 <0.3.0`（0.2.1 用户请使用 0.3.2）
 - 侧栏项目行、区头、视图菜单目前没有插件扩展点，插件通过 DOM 注入实现芯片、按钮、筛选图标和按标签重排；详见 [docs/DESIGN.md](docs/DESIGN.md)
 - 如果 DSH 升级后侧栏结构变化，通常只需要更新 [src/client/dom/selectors.ts](src/client/dom/selectors.ts)，见 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
 
@@ -191,11 +191,11 @@ test/                      Vitest
 - **取消分组标签**只影响该组项目；若同一标签在其它分组里作为非首标签使用，那些项目保持原样
 - 折叠状态、筛选与分组选择不跨刷新保存
 - 选择「按标签」会先把原生分组切到「按工作区」，并持久化这个原生选择
-- 仅在 0.2.1-rc.5 上做过端到端验证
+- 仅在 0.2.2-rc.5 上做过端到端验证（0.2.1 的 0.3.2 为历史版本）
 
 ## English overview
 
-`dsh-workspace-tags` adds colored tags to DeepSeek Harness workspace projects: chips beside project names (colored dot + colored border), an inline picker that turns typed text into a tag, a multi-select filter in the workspace header, a “By tag” grouping option in the view menu, and a dedicated Tags page above the sidebar’s More row. Tags are stored locally in `~/.dsh/storages/dsh_tags.json` through the authenticated `/api` route. Tested with DSH 0.2.1-rc.5. Source is TypeScript; each release ships a prebuilt tarball (`lib/` + `client/`), so installs need no local build.
+`dsh-workspace-tags` adds colored tags to DeepSeek Harness workspace projects: chips beside project names (colored dot + colored border), an inline picker that turns typed text into a tag, a multi-select filter in the workspace header, a “By tag” grouping option in the view menu, and a dedicated Tags page above the sidebar’s More row. Tags are stored locally in `~/.dsh/storages/dsh_tags.json` through the authenticated `/api` route. Tested with DSH 0.2.2-rc.5. Source is TypeScript; each release ships a prebuilt tarball (`lib/` + `client/`), so installs need no local build.
 
 ## License
 

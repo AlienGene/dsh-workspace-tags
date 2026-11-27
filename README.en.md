@@ -7,7 +7,7 @@ English | [中文](README.md)
 [![CI](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml/badge.svg)](https://github.com/AlienGene/dsh-workspace-tags/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/dsh-workspace-tags)](https://www.npmjs.com/package/dsh-workspace-tags)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
+[![DSH](https://img.shields.io/badge/DSH-0.2.2--rc.5-4c6ef5)](docs/COMPATIBILITY.md)
 
 ![Workspace tags preview](assets/en/preview.png)
 
@@ -128,7 +128,7 @@ For the desktop app, fully quit the app first and use the CLI that ships with it
 
 ### Plugin marketplace
 
-DSH’s plugin market is **index-based**: there is no built-in central store. The **Discover** tab reads index sources that each profile adds. The plugin is published to npm at **0.3.2**; community indexes that auto-discover npm packages with the `dsh-plugin` keyword and a `dsh.bundle` declaration (for example [REALOIYO’s DSH plugin index](https://realoiyo.github.io/dsh-plugin-market/index.json)) list it, typically within six hours.
+DSH’s plugin market is **index-based**: there is no built-in central store. The **Discover** tab reads index sources that each profile adds. The plugin is published to npm at **0.4.0**; community indexes that auto-discover npm packages with the `dsh-plugin` keyword and a `dsh.bundle` declaration (for example [REALOIYO’s DSH plugin index](https://realoiyo.github.io/dsh-plugin-market/index.json)) list it, typically within six hours.
 
 To browse it in DSH: **Plugins → Discover → Add index source**, paste the index URL, then install from the card. See [docs/MARKETPLACE.md](docs/MARKETPLACE.md) (Chinese) for the publication steps, index sources, and the promotion checklist.
 
@@ -157,7 +157,7 @@ dsh plugin --profile web add ./dsh-workspace-tags-<version>.tgz
 
 ## Compatibility
 
-- Built and verified against **DeepSeek Harness 0.2.1-rc.5**; `engines.dsh` is `>=0.2.1-rc.5 <0.3.0`
+- Built and verified against **DeepSeek Harness 0.2.2-rc.5**; `engines.dsh` is `>=0.2.2-rc.5 <0.3.0` (0.2.1 users should use 0.3.2)
 - The sidebar project row, header, and view menu currently expose no plugin slots, so the plugin augments the DOM for chips, buttons, the filter icon, and tag grouping; see [docs/DESIGN.md](docs/DESIGN.md)
 - If a DSH upgrade changes the sidebar structure, usually only [src/client/dom/selectors.ts](src/client/dom/selectors.ts) needs updating; see [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
 
@@ -193,7 +193,7 @@ test/                      Vitest
 - **Remove from group** only affects that group; projects that use the tag as a non-first tag elsewhere stay as they are
 - Collapse state, filters, and the grouping choice are not persisted across refreshes
 - Selecting **By tag** first switches the native grouping to **By workspace** and persists that native choice
-- End-to-end verification has only been done on 0.2.1-rc.5
+- End-to-end verification has only been done on 0.2.2-rc.5 (0.3.2 remains the 0.2.1 release)
 
 ## Marketplace and promotion
 

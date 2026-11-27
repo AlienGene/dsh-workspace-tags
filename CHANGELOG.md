@@ -2,6 +2,18 @@
 
 本项目的所有重要变更都记录在这里。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.4.0] - 2026-11-27
+
+### 修复
+
+- 修复 DSH 0.2.2-rc.5 下筛选/标注浮层不可用：0.2.2 的 `@deepseek-ai/dsh-client-ui-primitives` 移除了 `useAnchoredPosition`，导致 `shell.overlay` 槽位崩溃；浮层改用 CSS Anchor Positioning（`anchor-name` / `position-anchor` / `position-try-fallbacks`）。
+- 标注浮层统一锚定到稳定的工作区行，避免芯片重绘导致锚点失效；筛选/标注浮层在视口底部自动上翻，并限制高度。
+
+### 兼容性
+
+- `engines.dsh` 调整为 `>=0.2.2-rc.5 <0.3.0`；开发依赖对齐 0.2.2-rc.5；0.2.1 用户继续使用 0.3.2。
+- 侧栏 DOM 选择器在 0.2.2-rc.5 下未变化；芯片、标签页、按标签分组/折叠不受影响。
+
 ## [0.3.2] - 2026-11-05
 
 ### 变更

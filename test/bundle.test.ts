@@ -21,7 +21,7 @@ describe('package manifest', () => {
 
   it('limits compatibility to the tested DSH line', () => {
     const engines = (pkg as { engines?: { dsh?: string } }).engines
-    expect(engines?.dsh).toBe('>=0.2.1-rc.5 <0.3.0')
+    expect(engines?.dsh).toBe('>=0.2.2-rc.5 <0.3.0')
   })
 })
 
